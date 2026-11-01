@@ -59,3 +59,7 @@ Delivery 补充说明见 `prompts/team/delivery-rdg-gitlab.md`（GitLab 交付�
 - [011 RDG portal ops](011-rdg-portal-ops.md)  
 - [012 i讯飞企业机器人](012-ixunfei-bot.md)  
 - [013 Intranet GitLab CI](013-intranet-gitlab-ci.md)
+
+## admin-dev 开放 HMAC 现状（2026-11-02）
+
+`aihub-admin` 已将 open feedback 路由合入研发 `feature/deploy`（`d34774d`），`deploy_dev` 成功后直连返回应用层 `401 缺少网关身份`（不再是 Next 404）。说明 **应用侧已就绪**，仍差 **admin-dev Kong** 对 `/admin/api/open/feedback*` 挂 `hmac-auth` 并注入 `X-Consumer-Username=aihub-admin-api-inner`（与 admin-pre 对齐）。在此之前 `scripts/admin-open-hmac-smoke.py` 会失败；portal-feedback Source 继续走 **ai-dev Internal-Secret**，不依赖该 HMAC。
