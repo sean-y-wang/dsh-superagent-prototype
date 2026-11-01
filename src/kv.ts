@@ -64,4 +64,10 @@ export const KV = {
   feishu: { chats: record<Record<string, boolean>>('feishu-chats'), history: family<string, [chat: string]>('feishu-history:'),
     topics: family<Record<string, string>, [chat: string]>('feishu-history-threads:'),
     seen: family<string[], [thread: string]>('thread-seen:'), initialized: family<boolean, [thread: string]>('thread-initialized:') },
+  /**
+   * Portal-feedback Source: per-product-source poll cursor (`portal` | `console` | `docs`).
+   */
+  portalFeedback: {
+    stream: family<{ since: string; started: string }, [source: string]>('portal-feedback-stream:'),
+  },
 }

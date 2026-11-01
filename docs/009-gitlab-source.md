@@ -81,3 +81,7 @@ Setup succeeds when either the GitHub Source (repository + CLI) **or** the GitLa
 ## Related modules
 
 `src/sources/gitlab.ts`, `gitlab-trigger.ts`, `gitlab-channel.ts`, `gitlab-read.ts`, `gitlab-mr.ts`, `gitlab-api.ts`; skill `skills/dsh-superagent-gitlab`; export `./gitlab-watch`.
+
+## Related fork Sources
+
+Portal page-feedback intake is a separate Source (documented in 010 Portal-feedback Source).
