@@ -360,7 +360,7 @@ it('collects both roles\' tools, prompts, skills and inputs', () => {
     expect(toolsOf('orchestrator').has(name)).toBe(false)
   }
   const wheres = new Set(surfaces.map(surface => surface.where))
-  for (const where of ['orchestrator prompt runtime/dispatch', 'worker prompt runtime/work', 'skill dsh-superagent-github', 'skill dsh-superagent-gitlab', 'skill dsh-superagent-feishu',
+  for (const where of ['orchestrator prompt runtime/dispatch', 'worker prompt runtime/work', 'skill dsh-superagent-github', 'skill dsh-superagent-gitlab', 'skill dsh-superagent-portal-feedback', 'skill dsh-superagent-feishu',
     'orchestrator prompt runtime/admission', 'orchestrator input candidate', 'orchestrator input worker_attention', 'orchestrator input worker_report',
     'orchestrator input thread_unrelated', 'orchestrator input ticket_ended', 'orchestrator input settings_saved', 'worker input assignment (explicit)',
     'worker input assignment (inferred)', 'worker input policy-changed', 'worker input resumed', 'worker input status',
