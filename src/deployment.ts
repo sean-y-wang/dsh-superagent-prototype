@@ -8,6 +8,7 @@ import { z } from 'zod'
 import type { SubprocessRuntime } from '@deepseek-ai/dsh-subprocess'
 import { runAsWorker, sameDirectory, withoutDirectory, workerBin } from './infra/environment.ts'
 import { SetupError } from './setup.ts'
+import { FeishuBrandSchema, type FeishuBrand } from './infra/feishu-brand.ts'
 
 const reason = (error: unknown): string => error instanceof Error ? error.message : String(error)
 const absolute = (description: string) => s.string().pattern(/^\//).description(`${description} Absolute path.`)
@@ -67,7 +68,7 @@ export interface Deployment extends Machine {
   gitlab?: { baseUrl: string; project: string; cli: string; username: string }
   feishu?: FeishuBot
 }
-export interface FeishuBot { cli: string; appId: string; brand: 'feishu' | 'lark'; botId: string; name: string }
+export interface FeishuBot { cli: string; appId: string; brand: FeishuBrand; botId: string; name: string }
 
 /** Resolve a command name or absolute path to an executable file, ignoring the worker shim directory. */
 export function executable(name: string, path: string, exclude?: string): string {
@@ -117,7 +118,7 @@ export async function resolveDeployment(machine: Machine, github: unknown, probe
   return { ...machine, repository, github: { cli, login: agent.login, noreply: `${agent.id}+${agent.login}@users.noreply.github.com` } }
 }
 
-const AuthStatus = z.object({ appId: z.string().regex(/^cli_[A-Za-z0-9]+$/), brand: z.enum(['feishu', 'lark']).default('feishu'), identities: z.object({ bot: z.object({ status: z.string() }) }) })
+const AuthStatus = z.object({ appId: z.string().regex(/^cli_[A-Za-z0-9]+$/), brand: FeishuBrandSchema, identities: z.object({ bot: z.object({ status: z.string() }) }) })
 const BotInfo = z.object({ bot: z.object({ open_id: z.string().regex(/^ou_[A-Za-z0-9]+$/), app_name: z.string().default('') }) })
 /**
  * Verify that the configured Feishu CLI is authenticated as a bot and restricted to strict mode `bot`.

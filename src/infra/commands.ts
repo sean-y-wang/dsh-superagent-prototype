@@ -65,10 +65,10 @@ export class Commands {
   get deployment(): Deployment { return this.resolved() }
   get repository(): string { return this.deployment.repository }
   withSignal(signal?: AbortSignal): Commands { return signal ? new Commands(this.resolved, this.environment, AbortSignal.any([this.signal, signal])) : this }
-  async run(program: string, args: string[], cwd?: string): Promise<string> {
+  async run(program: string, args: string[], cwd?: string, extraEnv?: Record<string, string>): Promise<string> {
     try {
       const { stdout } = await exec(program, args, { cwd, signal: this.signal, timeout: TIMEOUT_MS, maxBuffer: 16 * 1024 * 1024,
-        env: { ...process.env, ...this.environment, GH_PROMPT_DISABLED: '1', LARKSUITE_CLI_NO_UPDATE_NOTIFIER: '1', LARKSUITE_CLI_NO_SKILLS_NOTIFIER: '1' } })
+        env: { ...process.env, ...this.environment, ...extraEnv, GH_PROMPT_DISABLED: '1', LARKSUITE_CLI_NO_UPDATE_NOTIFIER: '1', LARKSUITE_CLI_NO_SKILLS_NOTIFIER: '1' } })
       return stdout
     } catch (error) { throw commandError(error, program) }
   }
@@ -111,7 +111,8 @@ export class Commands {
   async lark<T>(args: string[], cwd?: string): Promise<T> {
     const bot = this.deployment.feishu
     if (!bot) throw new Error('The Feishu Source has no working bot CLI')
-    const output = await this.run(bot.cli, [...args, '--as', 'bot', '--format', 'json'], cwd)
+    const brandEnv = bot.brand && bot.brand !== 'feishu' ? { LARKSUITE_CLI_BRAND: bot.brand } : undefined
+    const output = await this.run(bot.cli, [...args, '--as', 'bot', '--format', 'json'], cwd, brandEnv)
       .catch((error: unknown) => { throw membership(error) })
     const result = JSON.parse(output) as { ok: boolean; data: T; error?: { code?: number; message?: string } }
     const code = result.error?.code

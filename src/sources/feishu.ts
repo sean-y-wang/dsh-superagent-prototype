@@ -31,12 +31,12 @@ export type FeishuConfig = z.infer<typeof FeishuConfigSchema>
 export const feishuKind: SourceKind<FeishuConfig> = {
   kind: SOURCE,
   refreshLabels: (host, signal) => refreshChatNames(sourceContext(host, feishuKind), signal),
-  title: { zh: '飞书', en: 'Feishu' },
-  description: { zh: '接收下列群和私聊中发给机器人的消息，补收群历史并轮询订阅的线程。', en: 'Receives messages to the bot in these chats and direct messages, recovers chat history and polls subscribed Threads.' },
+  title: { zh: '飞书 / i讯飞', en: 'Feishu / iFlytek IM' },
+  description: { zh: '接收飞书或 i讯飞（xfchat）群和私聊中发给机器人的消息；OpenAPI 兼容，brand 由 bot 的 lark-cli 决定。', en: 'Receives messages to the bot in Feishu or iFlytek IM (xfchat) chats; OpenAPI-compatible, brand comes from the bot lark-cli.' },
   schema: FeishuConfigSchema,
   fields: [
     { key: 'cli', type: 'text', label: { zh: '机器人的 lark-cli', en: 'Bot lark-cli' },
-      hint: { zh: '命令名或绝对路径，指向只允许机器人身份（strict mode bot）的 lark-cli 配置；执行器以 lark-cli 调用它。保存时读取应用和机器人，然后重启 dsh-superagent。', en: 'A command name or absolute path of a lark-cli configuration that allows only the bot identity (strict mode bot); the Executor calls it as lark-cli. Saving reads the app and the bot, then restarts dsh-superagent.' } },
+      hint: { zh: '命令名或绝对路径，指向只允许机器人身份（strict mode bot）的 lark-cli。接 i讯飞时包装脚本需 export LARKSUITE_CLI_BRAND=xfchat.iflytek.com，并使用支持该 brand 的定制 lark-cli。保存时读取应用和机器人，然后重启。', en: 'Command or absolute path of a bot-only (strict mode bot) lark-cli. For iFlytek IM, the wrapper must export LARKSUITE_CLI_BRAND=xfchat.iflytek.com and use a CLI that understands that brand. Saving reads the app and bot, then restarts.' } },
     { key: 'chats', type: 'rows', label: { zh: '接收的群', en: 'Chats' },
       hint: { zh: '“仅 @”只接收 @ 机器人的消息和已有工单的线程；“全部消息”也接收其余消息，评估可以按规则从中推断工作，需要机器人有读取全部消息的权限。', en: '"@ only" receives messages that mention the bot and Threads that have Tickets; "All" also receives the rest, from which Eval may infer work under the rules; the bot needs permission to read all messages.' },
       columns: [

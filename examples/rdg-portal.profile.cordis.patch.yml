@@ -1,8 +1,8 @@
 # Example DeepSeek Harness profile overlay for one RDG portal product repo.
 # Copy per instance (aihub-site, rdg-promotion-console, aihub-doc, aihub-service, aihub-admin).
-# Secrets stay in CLI wrapper env (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET), not here.
+# Secrets stay in CLI wrapper env (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET / lark-cli config dir), not here.
 #
-# See docs/011-rdg-portal-ops.md
+# See docs/011-rdg-portal-ops.md and docs/012-ixunfei-bot.md
 
 - update:
     - id: dsh-superagent
@@ -16,6 +16,6 @@
       disabled: false
     - id: dsh-superagent-portal-feedback
       disabled: false
-    # Optional decision cards / notices
+    # i讯飞企业机器人（Feishu Source + LARKSUITE_CLI_BRAND=xfchat.iflytek.com）
     - id: dsh-superagent-feishu
-      disabled: true
+      disabled: false

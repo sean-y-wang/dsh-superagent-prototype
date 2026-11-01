@@ -4,11 +4,12 @@ import { CliError } from '../infra/commands.ts'
 import { checkedImText } from '../infra/text.ts'
 import type { SourceContext } from './host.ts'
 import type { ChannelLink, ChannelLinks } from './kind.ts'
+import { feishuApplinkHost, feishuChannelLabel, type FeishuBrand } from '../infra/feishu-brand.ts'
 import { feishuTriggerId } from './feishu-trigger.ts'
 
-/** Feishu or Lark AppLink that opens a chat; used when the message's own link was not delivered with the event. */
-export const feishuChatLink = (brand: 'feishu' | 'lark', chatId: string): string =>
-  `https://applink.${brand === 'lark' ? 'larksuite.com' : 'feishu.cn'}/client/chat/open?openChatId=${encodeURIComponent(chatId)}`
+/** Feishu, Lark, or i讯飞 AppLink that opens a chat; used when the message's own link was not delivered with the event. */
+export const feishuChatLink = (brand: FeishuBrand, chatId: string): string =>
+  `https://applink.${feishuApplinkHost(brand)}/client/chat/open?openChatId=${encodeURIComponent(chatId)}`
 /**
  * True when Feishu permanently rejects a reply because the target message was recalled, withdrawn, or not found.
  * Only a Feishu response carrying one of these error codes means the target message is gone; timeouts or crashes do not.
@@ -29,7 +30,10 @@ export async function sendFeishu(host: Pick<SourceContext, 'commands'>, message:
   return 'sent'
 }
 /** Fallback chat link on the bot's brand; the message's own deep link on its Trigger is preferred when available. */
-export const feishuLink = (address: Record<string, string>, links: ChannelLinks): ChannelLink => ({
-  url: feishuChatLink(links.feishu?.brand ?? 'feishu', address.chatId ?? ''), label: { zh: '飞书消息', en: 'Feishu message' },
-  ...address.messageId ? { triggerId: feishuTriggerId(address.messageId) } : {},
-})
+export const feishuLink = (address: Record<string, string>, links: ChannelLinks): ChannelLink => {
+  const brand = links.feishu?.brand ?? 'feishu'
+  return {
+    url: feishuChatLink(brand, address.chatId ?? ''), label: feishuChannelLabel(brand),
+    ...address.messageId ? { triggerId: feishuTriggerId(address.messageId) } : {},
+  }
+}

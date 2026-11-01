@@ -1,0 +1,15 @@
+#!/bin/sh
+# Example wrapper: i讯飞 (xfchat) bot-only lark-cli for cloud-agent-dispatch.
+# Copy to e.g. ~/.local/bin/lark-bot-ixunfei, chmod +x, point Feishu Source "cli" at it.
+# Secrets live in LARKSUITE_CLI_CONFIG_DIR / keychain — never commit them.
+
+export LARKSUITE_CLI_BRAND="${LARKSUITE_CLI_BRAND:-xfchat.iflytek.com}"
+export LARKSUITE_CLI_CONFIG_DIR="${LARKSUITE_CLI_CONFIG_DIR:-$HOME/.lark-cli-cloud-agent-dispatch}"
+export LARKSUITE_CLI_NO_UPDATE_NOTIFIER=1
+export LARKSUITE_CLI_NO_SKILLS_NOTIFIER=1
+
+# Prefer a custom binary that understands xfchat brand; fall back to PATH.
+if [ -x /usr/local/bin/lark-cli ]; then
+  exec /usr/local/bin/lark-cli "$@"
+fi
+exec lark-cli "$@"
