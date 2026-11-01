@@ -1,0 +1,21 @@
+# Example DeepSeek Harness profile overlay for one RDG portal product repo.
+# Copy per instance (aihub-site, rdg-promotion-console, aihub-doc, aihub-service, aihub-admin).
+# Secrets stay in CLI wrapper env (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET), not here.
+#
+# See docs/011-rdg-portal-ops.md
+
+- update:
+    - id: dsh-superagent
+      config:
+        # Absolute path; one stateDir per product instance.
+        stateDir: /var/dsh/aihub-site
+
+# Enable fork Sources (bundled cordis.patch.yml leaves them disabled).
+- update:
+    - id: dsh-superagent-gitlab
+      disabled: false
+    - id: dsh-superagent-portal-feedback
+      disabled: false
+    # Optional decision cards / notices
+    - id: dsh-superagent-feishu
+      disabled: true

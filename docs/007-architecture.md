@@ -422,6 +422,7 @@ Some generic modules still refer directly to GitHub or Feishu:
 | `tests/feishu-read.spec.ts`, `tests/github-read.spec.ts`, `tests/gitlab-read.spec.ts` | Feishu, GitHub and GitLab reads |
 | `tests/gitlab.spec.ts` | GitLab Trigger translation, Channel send, kind schema and address parsing |
 | `tests/portal-feedback.spec.ts` | Portal-feedback intake filter, Trigger translation, Channel comment and kind schema |
+| `tests/watchdog.spec.ts` | The RDG portal stalled-ticket watchdog script (`scripts/rdg-portal-watchdog.py`) |
 | `tests/admission-context.spec.ts`, `tests/feishu-image.spec.ts` | The Thread window of assessments, and Feishu image reads |
 | `tests/assessment.spec.ts` | What the MasterAssessor keeps per Eval, and when it lets go |
 | `tests/background.spec.ts` | Waiting for a worker's shell jobs and subagents: an end that woke it, and a host that stops |

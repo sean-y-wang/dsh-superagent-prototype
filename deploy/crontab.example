@@ -1,0 +1,25 @@
+# RDG portal dsh-superagent watchdog — install on the intranet host (crontab -e).
+# Adjust paths, profiles, and hook URL. JSON lines are suitable for a Feishu adapter later.
+#
+# Docs: docs/011-rdg-portal-ops.md
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MAILTO=""
+
+# Every 30 minutes: scan five stateDirs; print JSON to a log (or POST --hook-url).
+*/30 * * * *  /usr/bin/python3 /opt/dsh-superagent-prototype/scripts/rdg-portal-watchdog.py \
+  --state-dir /var/dsh/aihub-site \
+  --state-dir /var/dsh/rdg-promotion-console \
+  --state-dir /var/dsh/aihub-doc \
+  --state-dir /var/dsh/aihub-service \
+  --state-dir /var/dsh/aihub-admin \
+  --stale-hours 24 \
+  --json \
+  >> /var/log/dsh-portal-watchdog.jsonl 2>&1
+
+# Optional: same scan, notify a webhook (Feishu bot adapter / internal relay).
+# */30 * * * *  /usr/bin/python3 /opt/dsh-superagent-prototype/scripts/rdg-portal-watchdog.py \
+#   --state-dir /var/dsh/aihub-site \
+#   --stale-hours 24 \
+#   --hook-url http://127.0.0.1:8090/hooks/dsh-watchdog
