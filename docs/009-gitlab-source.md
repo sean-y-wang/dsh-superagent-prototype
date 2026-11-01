@@ -2,7 +2,7 @@
 
 Upstream [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) supports **github.com only**. This fork adds a `gitlab` Source for self-hosted GitLab (for example `https://git.iflytek.com`), parallel to the GitHub Source.
 
-Keep the GitHub Source installed; disable or ignore it when the agent works only on GitLab projects. Core setup still resolves a GitHub CLI today — GitLab-only setup is listed under Remaining work.
+Keep the GitHub Source installed; disable or ignore it when the agent works only on GitLab projects. Setup accepts **GitLab-only** profiles (see below).
 
 ## Concepts
 
@@ -69,11 +69,14 @@ Use `$DSH_SUPERAGENT_GITLAB_PROJECT` and `$DSH_SUPERAGENT_GITLAB_BASE_URL` from 
 
 ## Remaining work
 
-- **Auth / setup:** optional GitLab-only deployment (today GitHub setup still gates `configured()`).
 - **Webhooks:** replace or complement poll with project hooks (Issues, MRs, notes, pipelines).
 - **Multi-project:** one Source instance = one project; run multiple dsh instances or extend config for several projects.
 - **Diff discussions:** reply-in-thread for resolvable discussions (currently top-level notes).
 - **Upstream sync:** keep `upstream` remote; avoid editing GitHub Source modules when pulling.
+
+## GitLab-only profiles
+
+Setup succeeds when either the GitHub Source (repository + CLI) **or** the GitLab Source (`baseUrl` + `project` + `cli`) is fully set. With only GitLab configured, `configured()` is true, the GitHub Source stays paused, and worker `gh` shims refuse with a clear error. You may also configure both.
 
 ## Related modules
 

@@ -157,9 +157,11 @@ export const gitlabKind: SourceKind<GitlabConfig> = {
       }
     },
   },
-  facts: (): Record<string, Localized | string> => ({
+  facts: (deployment): Record<string, Localized | string> => deployment?.gitlab ? {
+    cli: { zh: `当前账号 @${deployment.gitlab.username}（${deployment.gitlab.baseUrl}）`, en: `Current account @${deployment.gitlab.username} (${deployment.gitlab.baseUrl})` },
+  } : {
     cli: { zh: '由 glab 包装脚本登录；见 docs/009-gitlab-source.md', en: 'Signed in via the glab wrapper; see docs/009-gitlab-source.md' },
-  }),
+  },
 }
 
 /** Channel send bound to the live Source config and cached agent username. */

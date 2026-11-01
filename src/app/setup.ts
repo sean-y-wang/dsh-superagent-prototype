@@ -1,7 +1,7 @@
 /** Probes repository and account CLIs, configures the worker execution environment and command shims, and tracks setup readiness. */
 import type { Context } from '@deepseek-ai/cordis'
 import { UserError } from '../core/index.ts'
-import { SETUP_FIELDS, resolveDeployment, resolveFeishuBot, workerProbe, type Deployment, type Machine } from '../deployment.ts'
+import { SETUP_FIELDS, githubAccountsSet, gitlabAccountsSet, resolveDeployment, resolveFeishuBot, resolveGitlabAccount, workerProbe, type Deployment, type Machine } from '../deployment.ts'
 import { agentVariables, applyEnvironment, verifyEnvironment, withoutDirectory, workerBin, writeEnvironment } from '../infra/environment.ts'
 import type { Settings, SettingsBlock } from '../policy.ts'
 import { SetupError, type SetupProblem } from '../setup.ts'
@@ -61,6 +61,7 @@ export class Setup {
   async checkAccounts(block: SettingsBlock, settings: Settings): Promise<void> {
     const { machine } = this.host
     const check = block === 'source:feishu' ? resolveFeishuBot(machine, settings.sources.feishu?.config, this.probe())
+      : block === 'source:gitlab' ? resolveGitlabAccount(machine, settings.sources.gitlab?.config, this.probe())
       : resolveDeployment(machine, settings.sources.github?.config, this.probe())
     await check.catch((error: unknown) => { if (!(error instanceof SetupError) || error.place === block.slice(7)) throw error })
   }
@@ -76,7 +77,21 @@ export class Setup {
   private async resolve(settings: Settings): Promise<Deployment> {
     const { context, machine, lifetime } = this.host
     const probe = this.probe()
-    const deployment = await resolveDeployment(machine, settings.sources.github?.config, probe)
+    const wantGithub = githubAccountsSet(settings.sources.github?.config)
+    const wantGitlab = gitlabAccountsSet(settings.sources.gitlab?.config)
+    let deployment: Deployment
+    if (wantGithub) {
+      deployment = await resolveDeployment(machine, settings.sources.github?.config, probe)
+      if (wantGitlab) {
+        const gitlab = await resolveGitlabAccount(machine, settings.sources.gitlab?.config, probe)
+        deployment = { ...deployment, gitlab }
+      }
+    } else if (wantGitlab) {
+      const gitlab = await resolveGitlabAccount(machine, settings.sources.gitlab?.config, probe)
+      deployment = { ...machine, repository: '', gitlab }
+    } else {
+      throw new SetupError('noDeliverySource')
+    }
     const feishu = await resolveFeishuBot(machine, settings.sources.feishu?.config, probe).catch((error: unknown) => {
       if (!(error instanceof SetupError)) throw error
       this.feishuProblem = error.problem

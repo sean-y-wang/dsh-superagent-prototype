@@ -1,13 +1,18 @@
 /** Structured startup and configuration errors with the settings location where the operator can fix them. */
 import { fill } from './infra/text.ts'
 
-export type SetupPlace = 'deployment' | 'github' | 'feishu'
+export type SetupPlace = 'deployment' | 'github' | 'gitlab' | 'feishu'
 export const SETUP_PROBLEMS = {
   foreignFile: ['deployment', '{file} was not written by dsh-superagent; move it, or choose another state directory.'],
   gitTooOld: ['deployment', 'git does not read the github.com credential configuration dsh-superagent writes; dsh-superagent needs git 2.32 or later.'],
   environmentFailed: ['deployment', 'Preparing the agent environment failed.'],
+  noDeliverySource: ['deployment', 'Configure the GitHub Source (repository + CLI) or the GitLab Source (base URL, project, CLI) so dsh-superagent has a delivery target.'],
   repositoryUnset: ['github', 'The GitHub Source names no repository.'],
   agentCliUnset: ['github', 'The agent GitHub CLI is not set.'],
+  gitlabUnset: ['gitlab', 'The GitLab Source needs baseUrl, project, and cli.'],
+  gitlabCliMissing: ['gitlab', 'The agent GitLab CLI was not found.'],
+  gitlabCliSignedOut: ['gitlab', 'The agent GitLab CLI cannot read its account.'],
+  gitlabCliNoAccount: ['gitlab', 'The agent GitLab CLI did not report a GitLab username.'],
   agentCliMissing: ['github', 'The agent GitHub CLI was not found.'],
   agentCliSignedOut: ['github', 'The agent GitHub CLI cannot read its account.'],
   agentCliNoAccount: ['github', 'The agent GitHub CLI did not report a GitHub account.'],

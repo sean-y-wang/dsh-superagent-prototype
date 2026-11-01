@@ -48,11 +48,23 @@ export const GithubAccountsSchema = z.object({
 })
 export const FeishuBotSchema = z.object({ cli: z.string().trim().default('') })
 /** Source configuration keys that affect deployment setup and trigger a restart when changed. */
-export const SETUP_FIELDS: Readonly<Record<string, readonly string[]>> = { github: Object.keys(GithubAccountsSchema.shape), feishu: Object.keys(FeishuBotSchema.shape) }
+export const GitlabAccountsSchema = z.object({
+  baseUrl: z.string().trim().default(''),
+  project: z.string().trim().default(''),
+  cli: z.string().trim().default(''),
+})
+export const SETUP_FIELDS: Readonly<Record<string, readonly string[]>> = {
+  github: Object.keys(GithubAccountsSchema.shape),
+  gitlab: Object.keys(GitlabAccountsSchema.shape),
+  feishu: Object.keys(FeishuBotSchema.shape),
+}
 
 export interface Deployment extends Machine {
+  /** Canonical GitHub repository `owner/name` when the GitHub Source is configured; empty for GitLab-only profiles. */
   repository: string
-  github: { cli: string; login: string; noreply: string }
+  github?: { cli: string; login: string; noreply: string }
+  /** Present when setup resolved a GitLab agent account (GitLab-only or alongside GitHub). */
+  gitlab?: { baseUrl: string; project: string; cli: string; username: string }
   feishu?: FeishuBot
 }
 export interface FeishuBot { cli: string; appId: string; brand: 'feishu' | 'lark'; botId: string; name: string }
@@ -111,6 +123,30 @@ const BotInfo = z.object({ bot: z.object({ open_id: z.string().regex(/^ou_[A-Za-
  * Verify that the configured Feishu CLI is authenticated as a bot and restricted to strict mode `bot`.
  * Workers invoke this CLI as `lark-cli`, so a CLI that also permits a user identity would let workers act as that user.
  */
+/** Verify the agent GitLab CLI identity against a self-hosted instance (fork customization). */
+export async function resolveGitlabAccount(machine: Machine, gitlab: unknown, probe: Probe, path = process.env.PATH ?? ''): Promise<NonNullable<Deployment['gitlab']>> {
+  const { stateDir } = machine
+  const accounts = GitlabAccountsSchema.parse(gitlab ?? {})
+  if (!accounts.baseUrl || !accounts.project || !accounts.cli) throw new SetupError('gitlabUnset')
+  let cli: string
+  try { cli = executable(accounts.cli, path, workerBin(stateDir)) } catch (error) { throw new SetupError('gitlabCliMissing', { output: reason(error) }) }
+  const text = await probe([cli, 'api', 'user']).catch((error: unknown) => { throw new SetupError('gitlabCliSignedOut', { output: reason(error) }) })
+  const user = parsed(z.object({ username: z.string().min(1) }), text)
+  if (!user) throw new SetupError('gitlabCliNoAccount')
+  return { baseUrl: accounts.baseUrl.replace(/\/$/, ''), project: accounts.project, cli, username: user.username }
+}
+
+/** True when GitHub Source settings name both a repository and a CLI (enough to attempt GitHub setup). */
+export const githubAccountsSet = (github: unknown): boolean => {
+  const accounts = GithubAccountsSchema.safeParse(github ?? {})
+  return !!(accounts.success && accounts.data.repository && accounts.data.cli)
+}
+/** True when GitLab Source settings name baseUrl, project, and cli. */
+export const gitlabAccountsSet = (gitlab: unknown): boolean => {
+  const accounts = GitlabAccountsSchema.safeParse(gitlab ?? {})
+  return !!(accounts.success && accounts.data.baseUrl && accounts.data.project && accounts.data.cli)
+}
+
 export async function resolveFeishuBot(machine: Machine, feishu: unknown, probe: Probe, path = process.env.PATH ?? ''): Promise<FeishuBot | undefined> {
   const { cli: name } = FeishuBotSchema.parse(feishu ?? {})
   if (!name) return undefined

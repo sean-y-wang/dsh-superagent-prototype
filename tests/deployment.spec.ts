@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Config, executable, machineOf, resolveDeployment, resolveFeishuBot, type Machine, type Probe } from '../src/deployment.ts'
+import { Config, executable, gitlabAccountsSet, githubAccountsSet, machineOf, resolveDeployment, resolveFeishuBot, resolveGitlabAccount, type Machine, type Probe } from '../src/deployment.ts'
 import { gitEnv } from './fixtures/git.ts'
 
 const exec = promisify(execFile)
@@ -97,5 +97,45 @@ describe('setup', () => {
     await refuses('feishuNoBot')
     program(join(dir, 'bin', 'lark-cli'), 'echo "not configured" >&2; exit 1')
     await refuses('feishuCliFailed', { output: expect.stringContaining('not configured') })
+  })
+})
+
+
+describe('GitLab-only setup', () => {
+  const glab = (file: string, username = 'gitlab-bot'): string => program(file, `case "$*" in\n  "api user") echo '{"username":"${username}","id":42}' ;;\n  *) exit 1 ;;\nesac`)
+  it('detects when GitLab accounts are set enough to attempt setup', () => {
+    expect(gitlabAccountsSet({})).toBe(false)
+    expect(gitlabAccountsSet({ baseUrl: 'https://git.example.com', project: 'acme/widgets' })).toBe(false)
+    expect(gitlabAccountsSet({ baseUrl: 'https://git.example.com', project: 'acme/widgets', cli: 'glab' })).toBe(true)
+    expect(githubAccountsSet({ repository: 'acme/widgets', cli: 'gh' })).toBe(true)
+    expect(githubAccountsSet({ cli: 'gh' })).toBe(false)
+  })
+  it('resolves the GitLab agent identity from glab without requiring GitHub', async () => {
+    glab(join(dir, 'bin', 'glab'))
+    const gitlab = await resolveGitlabAccount(machine(), {
+      baseUrl: 'https://git.example.com/', project: 'acme/widgets', cli: 'glab',
+    }, probe, path)
+    expect(gitlab).toEqual({
+      baseUrl: 'https://git.example.com', project: 'acme/widgets',
+      cli: join(dir, 'bin', 'glab'), username: 'gitlab-bot',
+    })
+  })
+  it('names what GitLab setup needs', async () => {
+    const needs = (code: string, values: Record<string, unknown>, gitlab: unknown) =>
+      expect(resolveGitlabAccount(machine(), gitlab, probe, path)).rejects.toEqual(setupError('gitlab', code, values))
+    await needs('gitlabUnset', {}, { project: 'acme/widgets', cli: 'glab' })
+    await needs('gitlabUnset', {}, { baseUrl: 'https://git.example.com', cli: 'glab' })
+    await needs('gitlabUnset', {}, { baseUrl: 'https://git.example.com', project: 'acme/widgets' })
+    await needs('gitlabCliMissing', { output: `${join(dir, 'missing')} is not an executable file` }, {
+      baseUrl: 'https://git.example.com', project: 'acme/widgets', cli: join(dir, 'missing'),
+    })
+    await needs('gitlabCliSignedOut', {}, {
+      baseUrl: 'https://git.example.com', project: 'acme/widgets',
+      cli: program(join(dir, 'bin', 'glab-broken'), 'exit 1'),
+    })
+    await needs('gitlabCliNoAccount', {}, {
+      baseUrl: 'https://git.example.com', project: 'acme/widgets',
+      cli: program(join(dir, 'bin', 'glab-anonymous'), `echo '{}'`),
+    })
   })
 })
