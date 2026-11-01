@@ -12,3 +12,7 @@ Before substantial work on a new human request or note, call `orchestrator_ack` 
 Open merge requests with the agent GitLab CLI (`glab`) against `$DSH_SUPERAGENT_GITLAB_PROJECT` on `$DSH_SUPERAGENT_GITLAB_BASE_URL`. Use a source branch whose last path segment is `$DSH_SUPERAGENT_NAME` so the host can bind the MR to the ticket. Immediately after creating or adopting a ticket MR, call `orchestrator_report` with `state: progress` and include the MR iid in the report text; do not wait for pipelines or handoff.
 
 The host delivers subscribed Issue/MR notes and pipeline changes directly to the bound worker. Other activity is available on demand through orchestrator_read and the CLI instructions included in this skill.
+
+## RDG low-risk merge (fork)
+
+For portal product repos, research deploy branch is `feature/deploy`. After the MR is ready, run `scripts/gitlab-low-risk-merge.sh --project "$DSH_SUPERAGENT_GITLAB_PROJECT" --mr <iid>` (or `--dry-run`). Exit 2 means human gate: do not merge; notify via i讯飞 and the panel. Never merge to `release/deploy`. See `docs/014-rdg-phase1-close.md` and `prompts/team/delivery-rdg-gitlab.md`.

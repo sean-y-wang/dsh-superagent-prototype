@@ -1,0 +1,16 @@
+# RDG portal instance: aihub-doc (feedback source hint: docs)
+# Copy into the DeepSeek Harness profile overlay. Secrets stay in CLI wrappers.
+# Docs: docs/011-rdg-portal-ops.md, docs/012-ixunfei-bot.md, docs/014-rdg-phase1-close.md
+
+- update:
+    - id: dsh-superagent
+      config:
+        stateDir: /var/dsh/aihub-doc
+
+- update:
+    - id: dsh-superagent-gitlab
+      disabled: false
+    - id: dsh-superagent-portal-feedback
+      disabled: false
+    - id: dsh-superagent-feishu
+      disabled: false
