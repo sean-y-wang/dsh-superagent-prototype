@@ -105,4 +105,4 @@ Enable plugin `dsh-superagent-portal-feedback` (`dsh-superagent/portal-feedback-
 
 ## Ops
 
-Multi-instance deploy, deploy-branch merge policy, and watchdog: [011 RDG portal ops](011-rdg-portal-ops.md).
+Multi-instance deploy, deploy-branch merge policy, and watchdog are documented in 011 RDG portal ops.

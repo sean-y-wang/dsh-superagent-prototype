@@ -373,6 +373,10 @@ Some generic modules still refer directly to GitHub or Feishu:
 | `src/sources/gitlab-channel.ts` | The GitLab Channel: Issue/MR notes, `sent` or `gone` |
 | `src/sources/gitlab-read.ts` | Pipeline snapshots, the `gitlab/` resources, and `gitlabThreadContext` |
 | `src/sources/gitlab-api.ts` | `glab api` helper scoped to one project on a configured instance |
+| `src/sources/portal-feedback.ts` | The portal-feedback kind and plugin entry (fork: aihub-service admin page feedback) |
+| `src/sources/portal-feedback-trigger.ts` | Published feedback entries as Triggers, and product-repo hints |
+| `src/sources/portal-feedback-channel.ts` | The portal-feedback Channel: admin comments, `sent` or `gone` |
+| `src/sources/portal-feedback-api.ts` | Admin feedback API helper through a CLI wrapper that holds the Internal-Secret |
 | `src/sources/feishu.ts` | The Feishu kind and plugin entry, exported as `./feishu-watch` |
 | `src/sources/feishu-trigger.ts` | Feishu messages as Triggers, by one rule for live events, history pages and topic pages |
 | `src/sources/feishu-loops.ts` | The Feishu loops: the event consumer, history recovery, chat names and polling of subscribed topics |
@@ -417,6 +421,7 @@ Some generic modules still refer directly to GitHub or Feishu:
 | `tests/commands.spec.ts` | CLI calls as the deployment's accounts, the Channels' answers, and repository-scoped GitHub calls |
 | `tests/feishu-read.spec.ts`, `tests/github-read.spec.ts`, `tests/gitlab-read.spec.ts` | Feishu, GitHub and GitLab reads |
 | `tests/gitlab.spec.ts` | GitLab Trigger translation, Channel send, kind schema and address parsing |
+| `tests/portal-feedback.spec.ts` | Portal-feedback intake filter, Trigger translation, Channel comment and kind schema |
 | `tests/admission-context.spec.ts`, `tests/feishu-image.spec.ts` | The Thread window of assessments, and Feishu image reads |
 | `tests/assessment.spec.ts` | What the MasterAssessor keeps per Eval, and when it lets go |
 | `tests/background.spec.ts` | Waiting for a worker's shell jobs and subagents: an end that woke it, and a host that stops |

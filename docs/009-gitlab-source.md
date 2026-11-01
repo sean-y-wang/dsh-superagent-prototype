@@ -84,4 +84,4 @@ Setup succeeds when either the GitHub Source (repository + CLI) **or** the GitLa
 
 ## Related fork Sources
 
-Portal page-feedback intake is a separate Source — see [010 Portal-feedback Source](010-portal-feedback-source.md).
+Portal page-feedback intake is a separate Source (documented in 010 Portal-feedback Source).
