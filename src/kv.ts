@@ -49,6 +49,15 @@ export const KV = {
     branchCi: record<{ branch?: string; failures?: string[]; revision: number }>('github-branch-ci'),
     ci: family<{ fingerprint: string; revision: number }, [number: number]>('github-ci:') },
   /**
+   * GitLab Source (fork): cached agent username; per-thread note cursor; per-stream cursor and start time;
+   * default-branch pipeline state; per-MR pipeline fingerprint.
+   */
+  gitlab: { agent: record<string>('gitlab-agent'),
+    cursor: family<string, [thread: string]>('gitlab-cursor:'),
+    stream: family<{ since: string; started: string }, [stream: string]>('gitlab-stream:'),
+    branchPipeline: record<{ branch?: string; failures?: string[]; revision: number }>('gitlab-branch-pipeline'),
+    pipeline: family<{ fingerprint: string; revision: number }, [id: string]>('gitlab-pipeline:') },
+  /**
    * Feishu Source: known chats (`true` for direct messages); per-chat history cursor and active topics mapped from topic ID
    * to last-seen timestamp; and per-polled-thread seen message IDs and initialization flag.
    */
