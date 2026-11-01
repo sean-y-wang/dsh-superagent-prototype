@@ -562,10 +562,13 @@ function feishuDirectAddresses(store: Store): void {
 function feishuThreadLinks(store: Store): void {
   const lark = store.db.prepare(`SELECT 1 FROM trigger WHERE value ->> '$.source' = 'feishu'
     AND value ->> '$.url' LIKE '%larksuite.com%' LIMIT 1`).get()
+  const ixunfei = store.db.prepare(`SELECT 1 FROM trigger WHERE value ->> '$.source' = 'feishu'
+    AND value ->> '$.url' LIKE '%xfchat.iflytek.com%' LIMIT 1`).get()
+  const brand = ixunfei ? 'xfchat.iflytek.com' : lark ? 'lark' : 'feishu'
   for (const thread of store.threads.list()) {
     if (thread.ref.source !== 'feishu' || typeof thread.meta.url === 'string' || store.read.firstTrigger(thread.key)?.url) continue
     const chatId = thread.ref.id.split(':')[0]
-    if (chatId) store.threads.save({ ...thread, meta: { ...thread.meta, url: feishuChatLink(lark ? 'lark' : 'feishu', chatId) } })
+    if (chatId) store.threads.save({ ...thread, meta: { ...thread.meta, url: feishuChatLink(brand, chatId) } })
   }
 }
 /**

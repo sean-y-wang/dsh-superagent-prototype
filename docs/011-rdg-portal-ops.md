@@ -41,13 +41,16 @@ portal-feedback Source 的环境变量 `DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_R
 
 上游自带的 `dsh-superagent-github` 在纯 GitLab 交付时可保持配置为空；GitLab-only 时 `configured()` 仍可通过（见 docs/009）。
 
-## 飞书决策卡
+## i讯飞 / 飞书决策卡
 
-Eval 需要人拍板时走 Feishu Source 的出站（决策卡 / 回复）。运维侧：
+Eval 需要人拍板时走 **Feishu Source** 出站（决策卡 / 回复）。对讯飞内网，目标是 **i讯飞企业机器人**（xfchat，飞书兼容 OpenAPI），不是公网飞书。详见 [012 i讯飞企业机器人](012-ixunfei-bot.md)。
 
-1. 配置 bot-only `lark-cli`（strict-mode `bot`），见 docs/006。
-2. Policy 里允许名单与 admission 行与各仓一致。
-3. 低风险自动合入**不要**指望飞书点按钮去 push GitHub；人批或自动路径最终应落在 **GitLab MR → feature/deploy 或 release/deploy**。
+运维侧：
+
+1. 使用支持 `LARKSUITE_CLI_BRAND=xfchat.iflytek.com` 的定制 `lark-cli`，bot-only 配置（strict-mode `bot`）；包装示例 `scripts/lark-bot-ixunfei.example`。上游通用步骤仍见 docs/006。
+2. 开放平台在 `https://open.xfchat.iflytek.com` 建企业自建应用；密钥名 `IXUNFEI_APP_ID` / `IXUNFEI_APP_SECRET`（或同义 `FEISHU_*`），值不进仓库。
+3. Policy 里允许名单与 admission 行与各仓一致。
+4. 低风险自动合入**不要**指望 IM 点按钮去 push GitHub；人批或自动路径最终应落在 **GitLab MR → feature/deploy 或 release/deploy**。
 
 ## 低风险自动合入（GitLab CI，非 GitHub）
 
@@ -90,6 +93,7 @@ python3 scripts/rdg-portal-watchdog.py \
 - [006 Deployment](006-deployment.md)
 - [009 GitLab Source](009-gitlab-source.md)
 - [010 Portal-feedback Source](010-portal-feedback-source.md)
+- [012 i讯飞企业机器人](012-ixunfei-bot.md)
 
 ---
 
