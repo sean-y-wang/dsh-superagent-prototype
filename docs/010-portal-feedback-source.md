@@ -1,6 +1,6 @@
 # 010 Portal-feedback Source (fork)
 
-Polls the **aihub-service admin feedback API** (admin-pre style) for published page feedback and turns each item into a Trigger / Ticket. Progress writeback posts an **admin comment** on the same feedback. This is a fork customization; upstream dsh has no portal-feedback Source.
+Polls the **aihub-service admin feedback API** (admin-dev / research env) for published page feedback and turns each item into a Trigger / Ticket. Progress writeback posts an **admin comment** on the same feedback. This is a fork customization; upstream dsh has no portal-feedback Source.
 
 Survey reference: `aihub-service` `docs/page-feedback.md`, `internal/api/feedback.go`, `internal/feedback/model.go`.
 
@@ -22,7 +22,7 @@ Response envelope: `{ code: 0, message: "success", data }`. Entry fields include
 
 Source settings (no secrets):
 
-- `baseUrl` — origin that serves `/aihub/api/v1/admin/feedback` (e.g. `https://ai-pre.xf-yun.com`)
+- `baseUrl` — origin that serves `/aihub/api/v1/admin/feedback` (e.g. `https://ai-dev.xf-yun.com`)
 - `cli` — wrapper command (see below)
 - `sources` — which of portal / console / docs to poll
 - `adminNickname` — nickname on writeback comments (default `dsh-superagent`)
@@ -99,6 +99,10 @@ Enable plugin `dsh-superagent-portal-feedback` (`dsh-superagent/portal-feedback-
 ## Remaining / live deploy
 
 - Live `AIHUB_INTERNAL_SECRET` (or equivalent) on the deploy host; wrapper on `PATH`
-- Confirm `baseUrl` routing to aihub-service for the target env (dev / pre)
+- Confirm `baseUrl` routing to aihub-service for the target env (dev; do not use pre for phase-1 validation)
 - Optional: webhook or push from admin instead of poll
 - Optional: screenshot fetch (admin GET `/:id/screenshot`) for richer context — not in day-1
+
+## Ops
+
+Multi-instance deploy, deploy-branch merge policy, and watchdog: [011 RDG portal ops](011-rdg-portal-ops.md).

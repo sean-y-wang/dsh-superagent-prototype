@@ -43,14 +43,14 @@ export const portalFeedbackKind: SourceKind<PortalFeedbackConfig> = {
   kind: SOURCE,
   title: { zh: '门户反馈', en: 'Portal feedback' },
   description: {
-    zh: '轮询 aihub-service 管理端开放只读反馈 API（admin-pre 风格），将已发布反馈收为工单；进度通过管理员评论回写。密钥经 CLI 包装注入，不进设置。',
-    en: 'Polls the aihub-service admin feedback API (admin-pre style) for published items; progress writeback uses admin comments. Secrets stay in the CLI wrapper, not settings.',
+    zh: '轮询 aihub-service 管理端开放只读反馈 API（admin-dev / 研发环境），将已发布反馈收为工单；进度通过管理员评论回写。密钥经 CLI 包装注入，不进设置。',
+    en: 'Polls the aihub-service admin feedback API (admin-dev / research env) for published items; progress writeback uses admin comments. Secrets stay in the CLI wrapper, not settings.',
   },
   schema: PortalFeedbackConfigSchema,
   fields: [
     { key: 'baseUrl', type: 'text', pattern: 'https?://.+', label: { zh: '服务根地址', en: 'Service base URL' },
-      hint: { zh: '提供 /aihub/api/v1/admin/feedback 的源站，例如 https://ai-pre.xf-yun.com，不要末尾斜杠。',
-        en: 'Origin that serves /aihub/api/v1/admin/feedback, for example https://ai-pre.xf-yun.com, no trailing slash.' } },
+      hint: { zh: '提供 /aihub/api/v1/admin/feedback 的源站，例如 https://ai-dev.xf-yun.com，不要末尾斜杠。',
+        en: 'Origin that serves /aihub/api/v1/admin/feedback, for example https://ai-dev.xf-yun.com, no trailing slash.' } },
     { key: 'cli', type: 'text', label: { zh: '反馈 API CLI', en: 'Feedback API CLI' },
       hint: { zh: '命令名或绝对路径。包装脚本从环境注入 X-Internal-Secret（及可选 X-Admin-User）；配置里不要写密钥。见 docs/010。',
         en: 'Command name or absolute path. The wrapper injects X-Internal-Secret (and optional X-Admin-User) from its env; never put secrets in this configuration. See docs/010.' } },

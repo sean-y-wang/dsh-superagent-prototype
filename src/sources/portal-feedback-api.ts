@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { CliError, type Commands } from '../infra/commands.ts'
 
 export interface PortalFeedbackTarget {
-  /** Origin that serves `/aihub/api/v1/admin/feedback` (no trailing slash), e.g. https://ai-pre.xf-yun.com. */
+  /** Origin that serves `/aihub/api/v1/admin/feedback` (no trailing slash), e.g. https://ai-dev.xf-yun.com. */
   baseUrl: string
   /**
    * Absolute path or command name of a CLI wrapper that adds `X-Internal-Secret` (and optional `X-Admin-User`)
@@ -24,7 +24,7 @@ export const ApiEnvelope = z.looseObject({
  * The wrapper must prepend `baseUrl`, inject auth headers from its own env, and print the JSON body on stdout.
  * Example contract (see docs/010-portal-feedback-source.md):
  *   feedback-cli api GET /aihub/api/v1/admin/feedback?status=published&page=1&limit=50
- *   feedback-cli api POST /aihub/api/v1/admin/feedback/FB-…/comments --input -
+ *   feedback-cli api POST /aihub/api/v1/admin/feedback/FB-…/comments --body '<json>'
  */
 export class PortalFeedbackApi {
   constructor(private readonly commands: Commands, private readonly target: PortalFeedbackTarget) {}

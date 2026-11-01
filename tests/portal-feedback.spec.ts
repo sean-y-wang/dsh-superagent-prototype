@@ -8,7 +8,7 @@ import {
   FeedbackEntrySchema, FeedbackListSchema, feedbackTrigger, portalFeedbackKind, productRepo, shouldIntake, SOURCE,
 } from '../src/sources/portal-feedback.ts'
 
-const base = 'https://ai-pre.example.com'
+const base = 'https://ai-dev.example.com'
 const target = { baseUrl: base, cli: 'feedback-cli' }
 const commands = new Commands(() => testDeployment(), {}, new AbortController().signal)
 afterEach(() => vi.restoreAllMocks())
@@ -18,7 +18,7 @@ const published = {
   source: 'portal' as const,
   type: 'request' as const,
   content: 'Button does nothing',
-  pageUrl: 'https://ai-pre.xf-yun.com/models',
+  pageUrl: 'https://ai-dev.xf-yun.com/models',
   pageKey: '/models',
   pageTitle: 'Models',
   status: 'published',
