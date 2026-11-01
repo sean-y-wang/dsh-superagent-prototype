@@ -3,6 +3,8 @@ import type { SessionId } from '@deepseek-ai/dsh-session'
 import { UserError, key, latestReport, reached, runningAssignment, threadKey, type Ticket, type Trigger } from '../core/index.ts'
 import { batchOf, inputMessage, triggerMessage, workerSessionId } from '../executor/dsh.ts'
 import { readGithub } from '../sources/github-read.ts'
+import { readGitlab } from '../sources/gitlab-read.ts'
+import type { GitlabConfig } from '../sources/gitlab.ts'
 import { feishuReferences, feishuRead } from '../sources/feishu-read.ts'
 import { feishuRef } from '../sources/feishu.ts'
 import { feishuTriggerId } from '../sources/feishu-trigger.ts'
@@ -52,6 +54,7 @@ export const RESOURCES: readonly { name: string; holds: string; executor?: true 
   { name: 'models/<provider>', holds: 'one provider\'s models' },
   { name: 'feishu/<trigger-id>/…', holds: 'a Feishu original, as the dsh-superagent-feishu skill describes', executor: true },
   { name: 'github/…', holds: 'a GitHub original, as the dsh-superagent-github skill describes', executor: true },
+  { name: 'gitlab/…', holds: 'a GitLab original, as the dsh-superagent-gitlab skill describes', executor: true },
 ]
 export const resourceGrammar = (executor: boolean): string => RESOURCES.filter(resource => !executor || resource.executor)
   .map(resource => `${resource.name}: ${resource.holds}`).join('; ')
@@ -104,7 +107,7 @@ const trigger = (host: ResourceHost, id: string, ticketId?: string): Trigger => 
 async function sourcePage(read: Read, source: string, fetch: () => Promise<unknown>) {
   const { host, resource, offset, sessionId } = read
   const body = offset === 0 ? JSON.stringify(await fetch()) : host.pages.get(`${sessionId}:${resource}`)
-  if (body === undefined) throw new Error(`Read this ${source === 'feishu' ? 'Feishu' : 'GitHub'} resource from offset 0 first`)
+  if (body === undefined) throw new Error(`Read this ${source === 'feishu' ? 'Feishu' : source === 'gitlab' ? 'GitLab' : 'GitHub'} resource from offset 0 first`)
   if (offset === 0) host.pages.set(`${sessionId}:${resource}`, body)
   return text(read, body)
 }
@@ -207,6 +210,13 @@ const ROUTES: readonly Route[] = [
     return sourcePage(read, 'feishu', () => feishuRead(commands, ref, read.resource, read.host.feishuPageSize()))
   }],
   ['github/', read => sourcePage(read, 'github', () => readGithub(read.host.commands.withSignal(read.signal), read.resource))],
+  ['gitlab/', read => sourcePage(read, 'gitlab', () => {
+    const stored = read.host.store.settings().sources.gitlab?.config as GitlabConfig | undefined
+    if (!stored?.baseUrl || !stored.project || !stored.cli) throw new Error('The GitLab Source is not configured')
+    return readGitlab(read.host.commands.withSignal(read.signal), {
+      baseUrl: stored.baseUrl.replace(/\/$/, ''), project: stored.project, cli: stored.cli,
+    }, read.resource)
+  })],
   ['trigger/', async read => {
     const { host, rest, ticketId, offset, signal } = read
     if (!rest || rest.includes('/')) throw new Error('Unknown context resource')

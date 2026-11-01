@@ -22,6 +22,7 @@ import { IM_WORDS, NOTE_WORDS, checkedImText } from '../src/infra/text.ts'
 import { SettingsSchema } from '../src/policy.ts'
 import { feishuKind, feishuTrigger } from '../src/sources/feishu.ts'
 import { githubKind } from '../src/sources/github.ts'
+import { gitlabKind } from '../src/sources/gitlab.ts'
 import { testMachine } from './fixtures/deployment.ts'
 
 type Role = 'orchestrator' | 'worker'
@@ -69,8 +70,8 @@ const words = (count: number) => Array.from({ length: count }, () => 'word').joi
 /** Start a configured Runtime on a fake DSH host (as in tests/runtime.spec.ts) that records registered tools, prompts, skills, and delivered messages per session. */
 async function start() {
   const directory = mkdtempSync(join(tmpdir(), 'model-surface-'))
-  const AGENT = join(directory, 'agent-gh'), BOT = join(directory, 'lark-bot')
-  for (const cli of [AGENT, BOT]) writeFileSync(cli, '#!/bin/sh\n', { mode: 0o755 })
+  const AGENT = join(directory, 'agent-gh'), GLAB = join(directory, 'agent-glab'), BOT = join(directory, 'lark-bot')
+  for (const cli of [AGENT, GLAB, BOT]) writeFileSync(cli, '#!/bin/sh\n', { mode: 0o755 })
   const repository = { default_branch: 'master', permissions: { push: true } }
   vi.spyOn(Commands.prototype, 'gh').mockImplementation(async args => args[1] === 'user' ? { login: 'agent-bot' } : repository)
   vi.spyOn(Commands.prototype, 'lark').mockResolvedValue({ users: [{ member_id: MEMBER, name: 'Alice' }], has_more: false })
@@ -80,6 +81,7 @@ async function start() {
     [`git -C ${directory} rev-parse --show-toplevel`]: `${directory}\n`,
     [`git -C ${directory} remote get-url --push origin`]: 'https://github.com/acme/widgets.git\n',
     [`${AGENT} api user`]: '{"login":"agent-bot","id":7}',
+    [`${GLAB} api user`]: '{"username":"agent-bot","id":7}',
     [`${AGENT} api repos/acme/widgets --jq {name: .full_name, push: .permissions.push}`]: '{"name":"acme/widgets","push":true}\n',
     [`${BOT} auth status`]: JSON.stringify({ appId: 'cli_bot', brand: 'feishu', identities: { bot: { status: 'ready' } } }),
     [`${BOT} config strict-mode`]: 'strict-mode: bot (source: profile)',
@@ -138,16 +140,17 @@ async function start() {
   for (const [name, service] of Object.entries(services)) ctx.reflect.provide(name, service)
   const seed = new Store(join(directory, 'orchestrator.sqlite'))
   const github = { enabled: true, config: { repository: 'acme/widgets', cli: AGENT } }
-  seed.saveSettings(SettingsSchema.parse({ ...seed.settings(), sources: { github, feishu: { enabled: true, config: { cli: BOT } } } }))
+  const gitlab = { enabled: true, config: { baseUrl: 'https://git.example.com', project: 'acme/widgets', cli: GLAB } }
+  seed.saveSettings(SettingsSchema.parse({ ...seed.settings(), sources: { github, gitlab, feishu: { enabled: true, config: { cli: BOT } } } }))
   seed.close()
   const runtime = new Runtime(ctx, testMachine({ stateDir: directory }), () => {})
   await runtime.ready
-  runtime.sources.register(feishuKind); runtime.sources.register(githubKind)
+  runtime.sources.register(feishuKind); runtime.sources.register(githubKind); runtime.sources.register(gitlabKind)
   const settings = runtime.store.settings()
   const allowed = { feishu: { allowed: [{ id: MEMBER, name: 'Alice' }], syncChat: CHAT }, github: { allowed: [{ id: 'alice' }] } }
   const feishuSource = { enabled: true, config: { cli: BOT, chats: [{ chatId: CHAT, listen: 'all' }], directMessages: true } }
   runtime.store.saveSettings({ ...settings, policy: { ...settings.policy, sources: allowed }, eval: { ...settings.eval, mode: 'auto' },
-    sources: { ...settings.sources, feishu: feishuSource } })
+    sources: { ...settings.sources, feishu: feishuSource, gitlab: { enabled: true, config: { baseUrl: 'https://git.example.com', project: 'acme/widgets', cli: GLAB } } } })
   const run = async (sessionId: string, name: string, args: unknown) =>
     await tools.get(sessionId)!.get(name)!.execute(args, { signal: new AbortController().signal }) as Record<string, unknown>
   const stop = async () => { await runtime.stop(); vi.restoreAllMocks(); rmSync(directory, { recursive: true, force: true }) }
@@ -326,7 +329,7 @@ function failures(): Map<string, string> {
       if (word!.split('/').some(part => REPORT_WORDS.test(part)) && !(TICKET_STATES as readonly string[]).includes(word!)) fail(`"${phrase}" is not a card state`)
     }
     for (const [phrase] of text.matchAll(/\bwait(?:ing)? for (?:ready|waiting|blocked|failed)\b(?! report)/g)) fail(`"${phrase}" names a report state without report`)
-    for (const [found] of text.matchAll(/\b(?:ticket|trigger|decision|prompts|prompt-preview|models|feishu|github)\/[^\s"'`,;)\]]*/g)) {
+    for (const [found] of text.matchAll(/\b(?:ticket|trigger|decision|prompts|prompt-preview|models|feishu|github|gitlab)\/[^\s"'`,;)\]]*/g)) {
       const name = found.replace(/[.:]+$/, '')
       if (!RESOURCE_NAMES.some(pattern => pattern.test(name))) fail(`${name} is not a resource orchestrator_read reads`)
     }
@@ -357,7 +360,7 @@ it('collects both roles\' tools, prompts, skills and inputs', () => {
     expect(toolsOf('orchestrator').has(name)).toBe(false)
   }
   const wheres = new Set(surfaces.map(surface => surface.where))
-  for (const where of ['orchestrator prompt runtime/dispatch', 'worker prompt runtime/work', 'skill dsh-superagent-github', 'skill dsh-superagent-feishu',
+  for (const where of ['orchestrator prompt runtime/dispatch', 'worker prompt runtime/work', 'skill dsh-superagent-github', 'skill dsh-superagent-gitlab', 'skill dsh-superagent-feishu',
     'orchestrator prompt runtime/admission', 'orchestrator input candidate', 'orchestrator input worker_attention', 'orchestrator input worker_report',
     'orchestrator input thread_unrelated', 'orchestrator input ticket_ended', 'orchestrator input settings_saved', 'worker input assignment (explicit)',
     'worker input assignment (inferred)', 'worker input policy-changed', 'worker input resumed', 'worker input status',
