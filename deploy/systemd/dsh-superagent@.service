@@ -1,0 +1,21 @@
+[Unit]
+Description=dsh-superagent RDG portal instance (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dsh
+Group=dsh
+WorkingDirectory=/opt/cloud-agent-dispatch
+Environment=HOME=/var/dsh
+Environment=DSH_SUPERAGENT_PROFILE=%i
+# Wrappers inject GITLAB_TOKEN / AIHUB_INTERNAL_SECRET / LARKSUITE_CLI_* — do not put secrets here.
+EnvironmentFile=-/etc/dsh/%i.env
+ExecStart=/opt/cloud-agent-dispatch/scripts/dsh-superagent start --profile %i --foreground
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

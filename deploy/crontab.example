@@ -23,3 +23,14 @@ MAILTO=""
 #   --state-dir /var/dsh/aihub-site \
 #   --stale-hours 24 \
 #   --hook-url http://127.0.0.1:8090/hooks/dsh-watchdog
+
+# Optional: notify DEV owner on i讯飞 when findings exist (star-test bot).
+# */30 * * * *  /usr/bin/python3 /opt/cloud-agent-dispatch/scripts/rdg-portal-watchdog.py \
+#   --state-dir /var/dsh/aihub-site \
+#   --state-dir /var/dsh/rdg-promotion-console \
+#   --state-dir /var/dsh/aihub-doc \
+#   --state-dir /var/dsh/aihub-service \
+#   --state-dir /var/dsh/aihub-admin \
+#   --stale-hours 24 \
+#   --json \
+#   | /opt/cloud-agent-dispatch/scripts/rdg-portal-watchdog-ixunfei.sh

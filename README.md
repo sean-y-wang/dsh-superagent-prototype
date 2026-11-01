@@ -30,6 +30,11 @@ Read the numbered documents in order; each builds only on the ones before it.
 - [007 Architecture](docs/007-architecture.md)
 - [008 Cookbook](docs/008-cookbook.md): adding a Source
 - [009 GitLab Source](docs/009-gitlab-source.md): self-hosted GitLab (fork customization)
+- [010 Portal-feedback Source](docs/010-portal-feedback-source.md): admin page-feedback intake (fork)
+- [011 RDG portal ops](docs/011-rdg-portal-ops.md): five instances, watchdog, deploy branches
+- [012 i讯飞 bot](docs/012-ixunfei-bot.md): xfchat Feishu brand for decision cards
+- [013 Intranet GitLab CI](docs/013-intranet-gitlab-ci.md): cloud-agent-dispatch CI
+- [014 Phase-1 close](docs/014-rdg-phase1-close.md): low-risk merge + decision owner
 
 ## Development
 

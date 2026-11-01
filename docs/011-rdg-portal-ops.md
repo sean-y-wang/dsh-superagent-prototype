@@ -100,3 +100,5 @@ python3 scripts/rdg-portal-watchdog.py \
 ## English summary
 
 Run **five** dsh-superagent profiles (one `stateDir` each) for aihub-site, console, doc, service, and admin on an intranet host. Put GitLab PAT / `AIHUB_INTERNAL_SECRET` only in CLI wrappers. Enable `gitlab-watch` and optionally `portal-feedback-watch` / `feishu-watch`. Map feedback `source` → product repo via Worker env. **Low-risk auto-merge** means merging/pushing to GitLab `feature/deploy` (dev) or `release/deploy` (pre) so **GitLab CI** deploys — not GitHub. Use `scripts/rdg-portal-watchdog.py` on cron for stalled tickets (JSON or webhook).
+
+- [014 一期收尾：五实例 / 低风险合入 / 决策卡](014-rdg-phase1-close.md)
