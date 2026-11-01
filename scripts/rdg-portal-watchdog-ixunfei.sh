@@ -50,7 +50,7 @@ PY
 rm -f "$TMP"
 BODY=$(python3 -c 'import json,sys; print(json.dumps({"receive_id":sys.argv[1],"msg_type":"text","content":json.dumps({"text":sys.argv[2]}, ensure_ascii=False)}))' "$EMAIL" "$TEXT")
 
-if "$CLI" api POST /open-apis/im/v1/messages --params "receive_id_type=email" --data "$BODY" \
+if "$CLI" api POST /open-apis/im/v1/messages --params '{"receive_id_type":"email"}' --data "$BODY" \
   >/tmp/dsh-watchdog-ixunfei.out 2>/tmp/dsh-watchdog-ixunfei.err; then
   echo "notified $EMAIL findings=$COUNT"
   exit 0
