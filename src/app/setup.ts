@@ -90,7 +90,8 @@ export class Setup {
       const gitlab = await resolveGitlabAccount(machine, settings.sources.gitlab?.config, probe)
       deployment = { ...machine, repository: '', gitlab }
     } else {
-      throw new SetupError('noDeliverySource')
+      // Neither Source configured: report the GitHub setup problem first, as upstream does.
+      deployment = await resolveDeployment(machine, settings.sources.github?.config, probe)
     }
     const feishu = await resolveFeishuBot(machine, settings.sources.feishu?.config, probe).catch((error: unknown) => {
       if (!(error instanceof SetupError)) throw error
