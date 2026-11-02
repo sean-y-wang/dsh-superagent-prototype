@@ -83,7 +83,7 @@ Storage-gateway HMAC (`AIHUB_FEEDBACK_ACCESS_KEY` / `SECRET_KEY`) is for screens
 ## Host rollout checklist
 
 1. Intranet server with Node 22+, git, pnpm, DSH, glab, Python 3.
-2. Five profiles / `stateDir`s per `docs/011-rdg-portal-ops.md`.
+2. **One** profile / `stateDir` (`/var/dsh/rdg-portal`) per `docs/011-rdg-portal-ops.md` (phase-1 single-instance multi-repo). Five per-repo profiles are legacy only.
 3. Wrappers on `PATH` injecting the variables above.
-4. Cron for `scripts/rdg-portal-watchdog.py`.
+4. Cron for `scripts/rdg-portal-watchdog.py` (one `--state-dir`).
 5. Sync policy: keep GitHub fork for upstream pulls; GitLab for deploy.

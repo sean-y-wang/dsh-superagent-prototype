@@ -1,0 +1,22 @@
+# Phase-1 default: ONE dsh-superagent instance covering all five product repos.
+# Feedback source → product repo routing is in portal-feedback (see docs/010 / docs/011).
+# Secrets stay in CLI wrappers (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET / lark-cli config dir).
+#
+# Docs: docs/011-rdg-portal-ops.md, docs/014-rdg-phase1-close.md
+# Legacy per-repo overlays: examples/rdg-portal-profiles/
+
+- update:
+    - id: dsh-superagent
+      config:
+        # Single SQLite / panel for all product repos.
+        stateDir: /var/dsh/rdg-portal
+
+# Enable fork Sources (bundled cordis.patch.yml leaves them disabled).
+- update:
+    - id: dsh-superagent-gitlab
+      disabled: false
+    - id: dsh-superagent-portal-feedback
+      disabled: false
+    # i讯飞企业机器人（Feishu Source + LARKSUITE_CLI_BRAND=xfchat.iflytek.com）
+    - id: dsh-superagent-feishu
+      disabled: false

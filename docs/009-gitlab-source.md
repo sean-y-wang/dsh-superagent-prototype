@@ -70,7 +70,7 @@ Use `$DSH_SUPERAGENT_GITLAB_PROJECT` and `$DSH_SUPERAGENT_GITLAB_BASE_URL` from 
 ## Remaining work
 
 - **Webhooks:** replace or complement poll with project hooks (Issues, MRs, notes, pipelines).
-- **Multi-project:** one Source instance = one project; run multiple dsh instances or extend config for several projects.
+- **Multi-project observe:** the GitLab Source kind still configures **one** `project` for Issue/MR/pipeline **polling** (SourceRegistry = one instance per kind). Phase-1 **single-instance multi-repo** delivery does **not** require five GitLab Source plugins: portal-feedback sets `DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT` so Workers open MRs with `glab -R` against the product path. Extending this Source to poll several projects in one config remains future work.
 - **Diff discussions:** reply-in-thread for resolvable discussions (currently top-level notes).
 - **Upstream sync:** keep `upstream` remote; avoid editing GitHub Source modules when pulling.
 

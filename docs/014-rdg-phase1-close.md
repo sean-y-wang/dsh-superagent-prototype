@@ -1,20 +1,27 @@
-# 014 一期收尾：五实例、低风险合入、决策卡（fork）
+# 014 一期收尾：单实例多仓、低风险合入、决策卡（fork）
 
 对照总规划「一期工作拆分」W4–W6 与验收项。仅在**研发环境**验证（`feature/deploy` / admin-dev / ai-dev）。禁止操作灰度/pre（`release/deploy`、admin-pre、ai-pre）。
 
-## 五实例
+## 单实例多仓（一期默认）
 
-| Profile / `stateDir` | 产品仓 | portal-feedback |
+| 项 | 说明 |
+| --- | --- |
+| Profile / `stateDir` | `rdg-portal` → `/var/dsh/rdg-portal` |
+| Overlay | `examples/rdg-portal-single.cordis.patch.yml` |
+| systemd | `deploy/systemd/dsh-superagent-rdg-portal.service` |
+| portal-feedback | 开；轮询 `portal` / `console` / `docs` |
+| GitLab Source | 开；`project` 配一个观察仓；开 MR 用 `DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT` |
+| Feishu / 星辰测试 | 开；决策卡只发给 `xywang73@iflytek.com` |
+
+反馈路由：
+
+| `source` | 短名 | GitLab path（交付） |
 | --- | --- | --- |
-| `aihub-site` | `ai-hub/aihub-site` | 开（`source=portal`） |
-| `rdg-promotion-console` | `portal-rdg/rdg-promotion-console` | 开（`source=console`） |
-| `aihub-doc` | `ai-hub/aihub-doc` | 开（`source=docs`） |
-| `aihub-service` | `ai-hub/aihub-service` | 关（GitLab Issue/MR） |
-| `aihub-admin` | `ai-hub/aihub-admin` | 关（GitLab Issue/MR） |
+| portal | `aihub-site` | `rdg-ai-cloud/ai-hub/aihub-site` |
+| console | `rdg-promotion-console` | `rdg-ai-cloud/ai-hub/rdg-promotion-console` |
+| docs | `aihub-doc` | `rdg-ai-cloud/ai-hub/aihub-doc` |
 
-Overlay 示例：`examples/rdg-portal-profiles/*.cordis.patch.yml`。进程：`deploy/systemd/dsh-superagent@.service`。
-
-每个实例的 Feishu Source 使用同一套 **星辰测试** bot（`scripts/lark-bot-ixunfei.example` → `LARKSUITE_CLI_CONFIG_DIR=~/.lark-cli-cloud-agent-dispatch`），决策卡**只发给** `xywang73@iflytek.com`（或该邮箱对应的 `ou_…`，以面板 Policy 白名单为准）。
+`aihub-service` / `aihub-admin` 同实例承接 GitLab Issue/MR（无独立反馈 source）。遗留五实例 overlay：`examples/rdg-portal-profiles/`。
 
 ## 低风险自动合入（GitLab）
 
@@ -28,17 +35,19 @@ Overlay 示例：`examples/rdg-portal-profiles/*.cordis.patch.yml`。进程：`d
 4. MR pipeline `success`  
 5. **目标分支必须是 `feature/deploy`**（脚本拒绝 `release/deploy`）
 
-脚本：`scripts/gitlab-low-risk-merge.sh`。离线自检：`python3 scripts/gitlab-low-risk-merge-selftest.py`。
+脚本：`scripts/gitlab-low-risk-merge.sh --project "$PROJECT" --mr <iid>`，其中  
+`PROJECT="${DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT:-$DSH_SUPERAGENT_GITLAB_PROJECT}"`。  
+离线自检：`python3 scripts/gitlab-low-risk-merge-selftest.py`。
 
-任一条件不满足：不要 merge；Router / Eval 发 **i讯飞决策卡**，工单在面板挂起，等人确认。前期也可关掉自动路径，全部人工确认。
+任一条件不满足：不要 merge；Router / Eval 发 **i讯飞决策卡**，工单在面板挂起，等人确认。
 
-Delivery 补充说明见 `prompts/team/delivery-rdg-gitlab.md`（GitLab 交付时并入 Delivery requirements）。
+Delivery：`prompts/team/delivery-rdg-gitlab.md`。
 
 ## 人类决策：卡片 + 看板
 
 - **卡片**：Feishu Source（i讯飞 brand）出站；DEV 接收人固定为 `xywang73@iflytek.com`。  
-- **看板**：各实例 dsh 面板（Tickets / Eval Decisions）。一期不做跨实例汇总看板（二期项）。  
-- **停滞**：`scripts/rdg-portal-watchdog.py` + 可选 `scripts/rdg-portal-watchdog-ixunfei.sh` 把 findings IM 给同一接收人。
+- **看板**：单实例 dsh 面板（Tickets / Eval Decisions）。一期不做跨环境汇总看板（二期项）。  
+- **停滞**：`scripts/rdg-portal-watchdog.py --state-dir /var/dsh/rdg-portal` + 可选 `scripts/rdg-portal-watchdog-ixunfei.sh`。
 
 ## 收消息事件
 
@@ -48,11 +57,11 @@ Delivery 补充说明见 `prompts/team/delivery-rdg-gitlab.md`（GitLab 交付�
 
 | 项 | 做法 |
 | --- | --- |
-| 反馈进 Router | portal-feedback Source 轮询 ai-dev Internal-Secret；测试单 `FB-3eb3553a3a86432ba3b3f80c7564398e` |
-| Worker 开 MR + 评论回写 | GitLab Source + feedback-cli POST comments |
-| 决策卡 + 面板 | Feishu Source + panel；仅 DEV 接收人 |
+| 反馈进 Router | portal-feedback 轮询 ai-dev Internal-Secret；测试单 `FB-3eb3553a3a86432ba3b3f80c7564398e` |
+| Worker 开 MR + 评论回写 | `glab -R $DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT` + feedback-cli POST comments |
+| 决策卡 + 面板 | Feishu Source + 单面板；仅 DEV 接收人 |
 | 低风险进 feature/deploy | `gitlab-low-risk-merge.sh` |
-| 五仓可路由 | 五 profile；反馈按 `source` 落到 site/console/doc |
+| 五仓可路由 | 单实例；反馈按 `source` 落到 site/console/doc；service/admin 走 GitLab |
 
 ## 相关文档
 

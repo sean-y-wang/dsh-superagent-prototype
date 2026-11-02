@@ -12,7 +12,7 @@ import {
   FeedbackEntrySchema, FeedbackListSchema, PRODUCT_REPOS, SOURCE, feedbackTrigger, shouldIntake, type FeedbackEntry,
 } from './portal-feedback-trigger.ts'
 
-export { SOURCE, FeedbackEntrySchema, FeedbackListSchema, feedbackTrigger, shouldIntake, productRepo, PRODUCT_REPOS } from './portal-feedback-trigger.ts'
+export { SOURCE, FeedbackEntrySchema, FeedbackListSchema, feedbackTrigger, shouldIntake, productRepo, deliveryGitlabProject, gitlabPathForProduct, PRODUCT_REPOS, PRODUCT_GITLAB_PATHS, EXTRA_PRODUCT_GITLAB_PATHS } from './portal-feedback-trigger.ts'
 export type { PortalFeedbackTarget } from './portal-feedback-api.ts'
 
 const PortalFeedbackConfigSchema = z.object({
@@ -102,8 +102,11 @@ export const portalFeedbackKind: SourceKind<PortalFeedbackConfig> = {
       { key: 'DSH_SUPERAGENT_PORTAL_FEEDBACK_SOURCE', description: {
         zh: '反馈来源 portal|console|docs', en: 'Feedback source portal|console|docs' } },
       { key: 'DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO', description: {
-        zh: '按来源路由的产品仓提示：portal→aihub-site，console→rdg-promotion-console，docs→aihub-doc',
-        en: 'Product repo hint from source: portal→aihub-site, console→rdg-promotion-console, docs→aihub-doc' } },
+        zh: '按来源路由的产品仓短名：portal→aihub-site，console→rdg-promotion-console，docs→aihub-doc',
+        en: 'Short product repo from source: portal→aihub-site, console→rdg-promotion-console, docs→aihub-doc' } },
+      { key: 'DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT', description: {
+        zh: '开 MR / 低风险合入用的完整 GitLab 项目 path（单实例多仓时优先于 DSH_SUPERAGENT_GITLAB_PROJECT）',
+        en: 'Full GitLab project path for MR / low-risk merge (prefer over DSH_SUPERAGENT_GITLAB_PROJECT on single-instance multi-repo)' } },
       { key: 'DSH_SUPERAGENT_PORTAL_FEEDBACK_PAGE_URL', description: {
         zh: '反馈的页面 URL', en: 'Page URL of the feedback' } },
       { key: 'DSH_SUPERAGENT_PORTAL_FEEDBACK_TYPE', description: {
@@ -115,6 +118,7 @@ export const portalFeedbackKind: SourceKind<PortalFeedbackConfig> = {
           DSH_SUPERAGENT_PORTAL_FEEDBACK_ID: '',
           DSH_SUPERAGENT_PORTAL_FEEDBACK_SOURCE: '',
           DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO: '',
+          DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT: '',
           DSH_SUPERAGENT_PORTAL_FEEDBACK_PAGE_URL: '',
           DSH_SUPERAGENT_PORTAL_FEEDBACK_TYPE: '',
         }
@@ -124,6 +128,7 @@ export const portalFeedbackKind: SourceKind<PortalFeedbackConfig> = {
         DSH_SUPERAGENT_PORTAL_FEEDBACK_ID: String(meta.feedbackId ?? ''),
         DSH_SUPERAGENT_PORTAL_FEEDBACK_SOURCE: String(meta.source ?? ''),
         DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO: String(meta.productRepo ?? ''),
+        DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT: String(meta.productGitlabPath ?? ''),
         DSH_SUPERAGENT_PORTAL_FEEDBACK_PAGE_URL: String(meta.pageUrl ?? ''),
         DSH_SUPERAGENT_PORTAL_FEEDBACK_TYPE: String(meta.type ?? ''),
       }
