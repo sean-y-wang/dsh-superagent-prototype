@@ -22,7 +22,7 @@ def main() -> int:
         print("missing AIHUB_ADMIN_OPEN_HMAC_KEY_ID / AIHUB_ADMIN_OPEN_HMAC_SECRET", file=sys.stderr)
         return 2
     host = base.split("://", 1)[-1].split("/", 1)[0]
-    qs = urllib.parse.urlencode({"page": 1, "limit": 1, "sort": "created_at", "order": "asc"})
+    qs = urllib.parse.urlencode({"page": 1, "limit": 100, "sort": "created_at", "order": "asc"})
     path = f"/admin/api/open/feedback?{qs}"
     method = "GET"
     date = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
@@ -52,10 +52,16 @@ def main() -> int:
         return 1
     payload = data.get("data") or {}
     total = payload.get("total")
-    items = payload.get("items") or []
-    oldest = items[0] if items else None
+    items = list(payload.get("items") or [])
+    def created(it):
+        return it.get("createdAt") or it.get("created_at") or it.get("submittedAt") or ""
+    # Open API sort params are unreliable; pick true oldest client-side.
+    oldest = min(items, key=created) if items else None
     oid = (oldest or {}).get("id") or (oldest or {}).get("feedbackId")
-    print(f"PASS host={host} code=0 total={total} oldest_id={oid!r} (validation must use only this ticket)")
+    print(
+        f"PASS host={host} code=0 total={total} oldest_id={oid!r} "
+        f"created={created(oldest)!r} (validation must use only this ticket)"
+    )
     return 0
 
 if __name__ == "__main__":
