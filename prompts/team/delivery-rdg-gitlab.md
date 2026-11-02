@@ -1,4 +1,4 @@
-# Delivery requirements — RDG GitLab (feature/deploy only)
+# Delivery requirements — RDG GitLab (product MR → feature/deploy)
 
 When the ticket's product repository is on git.iflytek.com, ignore GitHub `gh pr merge --auto` paragraphs in the generic Delivery section.
 
@@ -10,7 +10,7 @@ Prefer **`$DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT`** when set (portal-feedback t
 PROJECT="${DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT:-$DSH_SUPERAGENT_GITLAB_PROJECT}"
 ```
 
-Open the MR with `glab -R "$PROJECT"` (or equivalent) and target branch `feature/deploy` for research validation. Never open or merge toward `release/deploy`, and never push to gray/pre hosts.
+Open the MR with `glab -R "$PROJECT"` (or equivalent) and target branch `feature/deploy` for the **product** repo (low-risk gate). Do not auto-merge product MRs into that product's `release/deploy` unless a human explicitly asks. Separate note: the **cloud-agent-dispatch** service itself deploys to gray by pushing **its** `release/deploy` branch (CI `deploy_pre`); that is not a product-repo merge.
 
 ## After the MR is ready
 
@@ -19,3 +19,5 @@ Open the MR with `glab -R "$PROJECT"` (or equivalent) and target branch `feature
 3. Never enable GitHub-style auto-merge as the agent account on GitLab; use the merge CLI named here (the glab wrapper) only for the low-risk path above, or wait for a person.
 
 Credit reviewers with ordinary MR notes; do not rewrite Git history with `git filter-branch` on GitLab deliverables unless a human explicitly asks.
+
+> Phase-1 cloud-agent-dispatch itself deploys on **release/deploy** (gray). Product MRs still target each product repo's deploy branch per team rules. Feedback verification: **oldest ticket only**.

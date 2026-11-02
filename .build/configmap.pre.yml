@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-agent-dispatch
+  namespace: aihub-platform-pre
+  labels:
+    app: cloud-agent-dispatch
+    env: pre
+data:
+  # Runtime secrets and model keys stay on hostPath / PolarIS — never in git.
+  # This file only documents non-secret boot hints for operators.
+  boot.env: |
+    DSH_SUPERAGENT_PROFILE=rdg-portal
+    HEALTH_PORT=19310
+    GITLAB_HOST=https://git.iflytek.com
+    # Point portal-feedback at gray admin/service once Kong HMAC is ready:
+    # AIHUB_ADMIN_OPEN_BASE_URL=https://admin-pre.xf-yun.com
+    # AIHUB_FEEDBACK_BASE_URL=https://ai-pre.xf-yun.com
+  README: |
+    Single-instance multi-repo (rdg-portal). See docs/011 and docs/013.
+    Populate /data1/aihub-platfrom-pre/configs/cloud-agent-dispatch with
+    wrappers (glab, feedback-cli, lark-cli) and DSH install before expecting
+    the agent loop to process tickets.

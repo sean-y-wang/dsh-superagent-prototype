@@ -2,7 +2,11 @@
 # Feedback source → product repo routing is in portal-feedback (see docs/010 / docs/011).
 # Secrets stay in CLI wrappers (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET / lark-cli config dir).
 #
-# Docs: docs/011-rdg-portal-ops.md, docs/014-rdg-phase1-close.md
+# Docs: docs/011-rdg-portal-ops.md, docs/013-intranet-gitlab-ci.md, docs/014-rdg-phase1-close.md
+# Gray defaults (set in wrappers / hostPath env, not in this file):
+#   AIHUB_ADMIN_OPEN_BASE_URL=https://admin-pre.xf-yun.com
+#   portal-feedback baseUrl=https://ai-pre.xf-yun.com
+# Feedback validation: oldest ticket only.
 # Legacy per-repo overlays: examples/rdg-portal-profiles/
 
 - update:
