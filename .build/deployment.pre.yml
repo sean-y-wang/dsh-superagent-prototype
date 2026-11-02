@@ -35,6 +35,10 @@ spec:
             - /usr/local/bin/watchdog
             - /app/scripts/k8s-entrypoint.sh
           env:
+            - name: APP_PORT
+              value: "19310"
+            - name: HOSTNAME
+              value: "0.0.0.0"
             - name: HEALTH_PORT
               value: "19310"
             - name: DSH_SUPERAGENT_PROFILE
