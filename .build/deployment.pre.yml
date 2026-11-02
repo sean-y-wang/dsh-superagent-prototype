@@ -47,11 +47,26 @@ spec:
               value: /var/dsh/rdg-portal
             - name: TZ
               value: Asia/Shanghai
+            - name: GITLAB_HOST
+              value: https://git.iflytek.com
+            - name: AIHUB_FEEDBACK_BASE_URL
+              value: https://ai-pre.xf-yun.com
+            - name: AIHUB_ADMIN_BASE_URL
+              value: https://ai-pre.xf-yun.com
+            - name: AIHUB_ADMIN_USER
+              value: dsh-superagent
             # Optional Kong registration if this workload later exposes HTTP upstream.
             - name: KONG_SERVICE_NAME
               value: upstream-platform-cloud-agent-dispatch-pre
             - name: KONG_ADMIN_API
               value: http://pre.iflyaicloud.com/service_find
+            # Secrets created by deploy_pre from GitLab CI masked vars (never in git).
+            - name: AIHUB_INTERNAL_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-agent-dispatch-secrets
+                  key: AIHUB_INTERNAL_SECRET
+                  optional: true
           ports:
             - name: health
               containerPort: 19310

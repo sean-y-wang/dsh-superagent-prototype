@@ -72,6 +72,15 @@ deploy_pre:
     - sed -i "s#\$IMAGE_TAG#$IMAGE_TAG#g" .build/deployment.pre.yml
     - kubectl apply -f .build/namespace.pre.yml
     - kubectl apply -f .build/configmap.pre.yml
+    # Upsert runtime secrets from CI masked vars (values never echoed).
+    - |
+      if [ -n "${AIHUB_INTERNAL_SECRET:-}" ]; then
+        kubectl -n "$K8S_NAMESPACE" create secret generic cloud-agent-dispatch-secrets \
+          --from-literal=AIHUB_INTERNAL_SECRET="$AIHUB_INTERNAL_SECRET" \
+          --dry-run=client -o yaml | kubectl apply -f -
+      else
+        echo "WARN: AIHUB_INTERNAL_SECRET CI var empty; comment writeback will 401 until set"
+      fi
     - kubectl apply -f .build/deployment.pre.yml
     - |
       kubectl -n "$K8S_NAMESPACE" rollout status deploy/cloud-agent-dispatch --timeout=300s || {
@@ -79,6 +88,15 @@ deploy_pre:
         kubectl -n "$K8S_NAMESPACE" describe pods -l app=cloud-agent-dispatch
         exit 1
       }
+    # Confirm image-baked dsh is on PATH (no secret output).
+    - kubectl -n "$K8S_NAMESPACE" exec deploy/cloud-agent-dispatch -- sh -c 'command -v dsh; dsh -V || dsh --version || true'
+    # Oldest-ticket comment smoke only (phase-1 rule).
+    - |
+      if [ -n "${AIHUB_INTERNAL_SECRET:-}" ]; then
+        export AIHUB_FEEDBACK_BASE_URL="${AIHUB_FEEDBACK_BASE_URL:-https://ai-pre.xf-yun.com}"
+        export AIHUB_ADMIN_USER="${AIHUB_ADMIN_USER:-dsh-superagent}"
+        bash scripts/feedback-oldest-comment-smoke.sh || echo "WARN: oldest-ticket comment smoke failed"
+      fi
   environment:
     name: pre
     url: https://ai-pre.xf-yun.com

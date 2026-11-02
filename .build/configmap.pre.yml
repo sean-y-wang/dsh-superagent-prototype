@@ -18,6 +18,5 @@ data:
     # AIHUB_FEEDBACK_BASE_URL=https://ai-pre.xf-yun.com
   README: |
     Single-instance multi-repo (rdg-portal). See docs/011 and docs/013.
-    Populate /data1/aihub-platfrom-pre/configs/cloud-agent-dispatch with
-    wrappers (glab, feedback-cli, lark-cli) and DSH install before expecting
-    the agent loop to process tickets.
+    Image bakes @deepseek-ai/dsh; deploy_pre upserts cloud-agent-dispatch-secrets
+    from CI AIHUB_INTERNAL_SECRET. hostPath still holds glab/lark wrappers.

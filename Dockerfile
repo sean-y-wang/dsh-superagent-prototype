@@ -35,8 +35,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=watchdog /out/watchdog /usr/local/bin/watchdog
 COPY --from=builder /src /app
-RUN chmod +x /app/scripts/k8s-entrypoint.sh /app/scripts/health-server.py \
-  && mkdir -p /var/dsh/rdg-portal /app/log
+# Bake DSH CLI so gray pods are not health-only when hostPath npm is empty.
+RUN npm install --omit=dev --prefix /opt/dsh @deepseek-ai/dsh@0.2.1-rc.5 \
+  && ln -sfn /opt/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js /usr/local/bin/dsh-bin.js \
+  && printf '%s\n' '#!/usr/bin/env bash' 'exec node /usr/local/bin/dsh-bin.js "$@"' > /usr/local/bin/dsh \
+  && chmod +x /usr/local/bin/dsh /app/scripts/k8s-entrypoint.sh /app/scripts/health-server.py /app/scripts/feedback-cli \
+  && mkdir -p /var/dsh/rdg-portal /app/log \
+  && dsh -V || dsh --version || true
 
 EXPOSE 19310
 # K8s wraps with watchdog; local docker run can use entrypoint directly.
