@@ -25,3 +25,10 @@
 - [011 ops](011-rdg-portal-ops.md) — single-instance runbook
 - [013 CI](013-intranet-gitlab-ci.md) — branch map and variables
 - [012 i讯飞](012-ixunfei-bot.md)
+
+## Gray accept note (2026-11-02 Asia/Shanghai)
+
+- admin-pre open HMAC GET works; pick oldest client-side (`FB-f079316f050544ae963743a1217885bc` at time of accept).
+- ai-pre Internal-Secret list/detail GET works.
+- ai-pre `POST .../admin/feedback/:id/comments` returns plain 404 (route not on pre image yet) — comment writeback blocked until aihub-service release/deploy includes admin comments.
+- Pod Ready after APP_PORT; hostPath configs still empty (health-only, no dsh loop).
