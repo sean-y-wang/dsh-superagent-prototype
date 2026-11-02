@@ -1,0 +1,127 @@
+# Intranet GitLab CI for cloud-agent-dispatch (dsh-superagent RDG fork).
+# Subgroup runner on rdg-ai-cloud/ai-hub — no job tags; do not register a per-project runner.
+# Branch map (same as aihub-admin / aihub-service):
+#   feature/deploy  → build image + deploy_dev (研发, ns platform) when manifests exist
+#   release/deploy  → build image + deploy_pre (灰度 aihub-platform-pre)
+# Secrets only via CI/CD variables / hostPath wrappers — never committed.
+
+stages:
+  - build
+  - package
+  - deploy
+
+variables:
+  GIT_STRATEGY: clone
+  IMAGE_REPO: artifacts.iflytek.com/docker-private/aipaas/cloud-agent-dispatch
+  IMAGE_TAG: ${CI_COMMIT_REF_SLUG}_build${CI_PIPELINE_IID}
+  NODE_IMAGE: node:22-bookworm
+  K8S_NAMESPACE: platform
+
+build_npm:
+  stage: build
+  image: ${NODE_IMAGE}
+  script:
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
+    - pnpm install
+    - pnpm build
+  artifacts:
+    paths:
+      - lib/
+      - package.json
+      - cordis.patch.yml
+      - locale/
+      - prompts/
+      - skills/
+      - scripts/
+      - docs/
+      - examples/
+      - deploy/
+      - .build/
+    expire_in: 7 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/deploy"
+    - if: $CI_COMMIT_BRANCH == "release/deploy"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+package_image:
+  stage: package
+  image: artifacts.iflytek.com/docker-private/ai_devops/docker:24.0
+  script:
+    - docker login artifacts.iflytek.com -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    - docker build --network=host -t "$IMAGE_REPO:$IMAGE_TAG" .
+    - docker push "$IMAGE_REPO:$IMAGE_TAG"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/deploy"
+    - if: $CI_COMMIT_BRANCH == "release/deploy"
+  needs:
+    - build_npm
+
+# Gray / pre — same shape as aihub-admin deploy_pre
+deploy_pre:
+  stage: deploy
+  image: artifacts.iflytek.com/docker-private/aiaas/kubectl:v1.25.0
+  resource_group: cloud-agent-dispatch-pre
+  variables:
+    K8S_NAMESPACE: aihub-platform-pre
+  script:
+    - mkdir -p ~/.kube
+    - cp "$KUBECONFIG_PRE" ~/.kube/config
+    - chmod 600 ~/.kube/config
+    - sed -i "s#\$IMAGE_TAG#$IMAGE_TAG#g" .build/deployment.pre.yml
+    - kubectl apply -f .build/namespace.pre.yml
+    - kubectl apply -f .build/configmap.pre.yml
+    - kubectl apply -f .build/deployment.pre.yml
+    - |
+      kubectl -n "$K8S_NAMESPACE" rollout status deploy/cloud-agent-dispatch --timeout=300s || {
+        kubectl -n "$K8S_NAMESPACE" get pods -o wide -l app=cloud-agent-dispatch
+        kubectl -n "$K8S_NAMESPACE" describe pods -l app=cloud-agent-dispatch
+        exit 1
+      }
+  environment:
+    name: pre
+    url: https://ai-pre.xf-yun.com
+  rules:
+    - if: $CI_COMMIT_BRANCH == "release/deploy"
+  needs:
+    - package_image
+
+# R&D path (optional; needs .build/deployment.yml + KUBECONFIG_DEV)
+deploy_dev:
+  stage: deploy
+  image: artifacts.iflytek.com/docker-private/aiaas/kubectl:v1.25.0
+  script:
+    - mkdir -p ~/.kube
+    - cp "$KUBECONFIG_DEV" ~/.kube/config
+    - chmod 600 ~/.kube/config
+    - |
+      if [ ! -f .build/deployment.yml ]; then
+        echo "SKIP deploy_dev: .build/deployment.yml not present yet (gray-first)"
+        exit 0
+      fi
+    - sed -i "s#\$IMAGE_TAG#$IMAGE_TAG#g" .build/deployment.yml
+    - sed -i "s#\$DEV_NODE_NAME#${DEV_NODE_NAME:-0i}#g" .build/deployment.yml
+    - kubectl apply -f .build/configmap.yml
+    - kubectl apply -f .build/deployment.yml
+    - kubectl -n "$K8S_NAMESPACE" rollout status deploy/cloud-agent-dispatch --timeout=180s
+  environment:
+    name: development
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/deploy"
+  needs:
+    - package_image
+  allow_failure: true
+
+# Readonly open-API smoke. Default admin-dev; set AIHUB_ADMIN_OPEN_ALLOW_PRE=1 for admin-pre.
+# Feedback validation must use only the oldest ticket (see docs/013).
+smoke_admin_open_hmac:
+  stage: build
+  image: ${NODE_IMAGE}
+  script:
+    - python3 scripts/admin-open-hmac-smoke.py
+  rules:
+    - if: $CI_COMMIT_BRANCH == "feature/deploy"
+    - if: $CI_COMMIT_BRANCH == "release/deploy"
+  allow_failure: true
+  needs: []

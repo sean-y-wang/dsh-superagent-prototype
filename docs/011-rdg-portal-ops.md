@@ -1,5 +1,8 @@
 # 011 RDG 门户自驱研发 · 运维手册（fork）
 
+> **2026-11-02：** 一期默认部署改为 **灰度**（GitLab `release/deploy` → `deploy_pre` → `aihub-platform-pre`），拓扑为 **单实例多仓**（`rdg-portal` / `/var/dsh/rdg-portal`）。下文「五实例」段落保留作 legacy；新机请用 `examples/rdg-portal-single.cordis.patch.yml` + `deploy/systemd/dsh-superagent-rdg-portal.service`，或 K8s `.build/deployment.pre.yml`。反馈联调 **只碰最老一条** 反馈单。
+
+
 本文说明如何在**内网服务器**上跑 **一个** dsh-superagent 实例，覆盖五个产品仓，并配合 GitLab Source、portal-feedback Source、飞书决策卡与低风险自动合入。上游 dsh 仅支持 github.com；本 fork 的交付与 CI 合入走 **git.iflytek.com**，不是 GitHub。
 
 英文要点见文末 *English summary*。

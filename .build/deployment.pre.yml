@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-agent-dispatch
+  namespace: aihub-platform-pre
+  labels:
+    app: cloud-agent-dispatch
+    env: pre
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: cloud-agent-dispatch
+  template:
+    metadata:
+      labels:
+        app: cloud-agent-dispatch
+        env: pre
+    spec:
+      hostNetwork: true
+      dnsPolicy: Default
+      nodeSelector:
+        kubernetes.io/hostname: hf-10-104-102-73.ai.cn
+      containers:
+        - name: cloud-agent-dispatch
+          image: artifacts.iflytek.com/docker-private/aipaas/cloud-agent-dispatch:$IMAGE_TAG
+          imagePullPolicy: Always
+          workingDir: /app
+          command:
+            - /usr/local/bin/watchdog
+            - /app/scripts/k8s-entrypoint.sh
+          env:
+            - name: HEALTH_PORT
+              value: "19310"
+            - name: DSH_SUPERAGENT_PROFILE
+              value: rdg-portal
+            - name: DSH_STATE_DIR
+              value: /var/dsh/rdg-portal
+            - name: TZ
+              value: Asia/Shanghai
+            # Optional Kong registration if this workload later exposes HTTP upstream.
+            - name: KONG_SERVICE_NAME
+              value: upstream-platform-cloud-agent-dispatch-pre
+            - name: KONG_ADMIN_API
+              value: http://pre.iflyaicloud.com/service_find
+          ports:
+            - name: health
+              containerPort: 19310
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 12
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+            initialDelaySeconds: 30
+          volumeMounts:
+            - name: config
+              mountPath: /app/k8s-config
+              readOnly: true
+            - name: host-config
+              mountPath: /data1/aihub-platfrom-pre/configs/cloud-agent-dispatch
+            - name: state
+              mountPath: /var/dsh/rdg-portal
+            - name: logs
+              mountPath: /app/log
+            - name: timezone
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: cloud-agent-dispatch
+        - name: host-config
+          hostPath:
+            path: /data1/aihub-platfrom-pre/configs/cloud-agent-dispatch
+            type: DirectoryOrCreate
+        - name: state
+          hostPath:
+            path: /data1/aihub-platfrom-pre/state/cloud-agent-dispatch
+            type: DirectoryOrCreate
+        - name: logs
+          hostPath:
+            path: /data1/aihub-platfrom-pre/logs/cloud-agent-dispatch
+            type: DirectoryOrCreate
+        - name: timezone
+          hostPath:
+            path: /etc/localtime
