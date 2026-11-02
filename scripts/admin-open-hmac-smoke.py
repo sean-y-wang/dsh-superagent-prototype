@@ -48,7 +48,7 @@ def main() -> int:
         print(f"FAIL {type(e).__name__}: {e}")
         return 1
     if data.get("code") != 0:
-        print(f"FAIL api_code={data.get("code")} message={data.get("message")!r}")
+        print("FAIL api_code=%s message=%r" % (data.get("code"), data.get("message")))
         return 1
     payload = data.get("data") or {}
     total = payload.get("total")
