@@ -5,7 +5,8 @@ import type { OutboundMessage } from '../src/core/index.ts'
 import { PortalFeedbackApi } from '../src/sources/portal-feedback-api.ts'
 import { sendPortalFeedback, portalFeedbackLink } from '../src/sources/portal-feedback-channel.ts'
 import {
-  FeedbackEntrySchema, FeedbackListSchema, feedbackTrigger, portalFeedbackKind, productRepo, shouldIntake, SOURCE,
+  FeedbackEntrySchema, FeedbackListSchema, deliveryGitlabProject, feedbackTrigger, gitlabPathForProduct,
+  portalFeedbackKind, productRepo, shouldIntake, SOURCE,
 } from '../src/sources/portal-feedback.ts'
 
 const base = 'https://ai-dev.example.com'
@@ -39,6 +40,15 @@ it('parses config defaults and finds FB- thread references', () => {
   })
 })
 
+it('maps feedback source to short repo name and full GitLab delivery path', () => {
+  expect(deliveryGitlabProject('portal')).toBe('rdg-ai-cloud/ai-hub/aihub-site')
+  expect(deliveryGitlabProject('console')).toBe('rdg-ai-cloud/ai-hub/rdg-promotion-console')
+  expect(deliveryGitlabProject('docs')).toBe('rdg-ai-cloud/ai-hub/aihub-doc')
+  expect(gitlabPathForProduct('aihub-site')).toBe('rdg-ai-cloud/ai-hub/aihub-site')
+  expect(gitlabPathForProduct('aihub-admin')).toBe('rdg-ai-cloud/ai-hub/aihub-admin')
+  expect(gitlabPathForProduct('unknown')).toBe('')
+})
+
 it('skips draft, deleted, and empty content on the fast path', () => {
   expect(shouldIntake(FeedbackEntrySchema.parse(published))).toBe(true)
   expect(shouldIntake(FeedbackEntrySchema.parse({ ...published, status: 'draft' }))).toBe(false)
@@ -52,10 +62,20 @@ it('builds a Trigger with productRepo meta and stable id', () => {
   expect(a.id).toBe(b.id)
   expect(a.source).toBe(SOURCE)
   expect(a.meta).toMatchObject({
-    feedbackId: published.id, source: 'portal', productRepo: 'aihub-site', type: 'request',
+    feedbackId: published.id, source: 'portal', productRepo: 'aihub-site',
+    productGitlabPath: 'rdg-ai-cloud/ai-hub/aihub-site', type: 'request',
   })
   expect(a.channel?.address.id).toBe(published.id)
   expect(a.text).toContain('Button does nothing')
+})
+
+it('exposes delivery GitLab project in Worker environment for feedback tickets', () => {
+  const trigger = feedbackTrigger(FeedbackEntrySchema.parse(published))
+  const values = portalFeedbackKind.environment!.values!({ config: portalFeedbackKind.schema.parse({}), trigger })
+  expect(values.DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO).toBe('aihub-site')
+  expect(values.DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT).toBe('rdg-ai-cloud/ai-hub/aihub-site')
+  const empty = portalFeedbackKind.environment!.values!({ config: portalFeedbackKind.schema.parse({}), trigger: undefined })
+  expect(empty.DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT).toBe('')
 })
 
 it('lists published feedback through the CLI wrapper and unwraps the API envelope', async () => {

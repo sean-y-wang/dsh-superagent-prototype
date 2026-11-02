@@ -76,11 +76,15 @@ echo "usage: $0 api GET|POST …" >&2; exit 2
 
 ## Product routing
 
-| `source` | Worker env `DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO` |
-| --- | --- |
-| portal | `aihub-site` |
-| console | `rdg-promotion-console` |
-| docs | `aihub-doc` |
+Phase-1 runs **one** dsh instance. portal-feedback polls all three sources in that process and sets Worker env so delivery targets the right GitLab project (see [011](011-rdg-portal-ops.md)).
+
+| `source` | `DSH_SUPERAGENT_PORTAL_FEEDBACK_PRODUCT_REPO` | `DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT` |
+| --- | --- | --- |
+| portal | `aihub-site` | `rdg-ai-cloud/ai-hub/aihub-site` |
+| console | `rdg-promotion-console` | `rdg-ai-cloud/ai-hub/rdg-promotion-console` |
+| docs | `aihub-doc` | `rdg-ai-cloud/ai-hub/aihub-doc` |
+
+Delivery (`prompts/team/delivery-rdg-gitlab.md`) prefers `DSH_SUPERAGENT_DELIVERY_GITLAB_PROJECT` over the single GitLab Source `project` field.
 
 ## Channel writeback
 
@@ -105,4 +109,4 @@ Enable plugin `dsh-superagent-portal-feedback` (`dsh-superagent/portal-feedback-
 
 ## Ops
 
-Multi-instance deploy, deploy-branch merge policy, and watchdog are documented in 011 RDG portal ops.
+Single-instance (multi-repo) deploy is the phase-1 default; deploy-branch merge policy and watchdog are in 011 RDG portal ops. Per-repo profiles under `examples/rdg-portal-profiles/` are legacy.

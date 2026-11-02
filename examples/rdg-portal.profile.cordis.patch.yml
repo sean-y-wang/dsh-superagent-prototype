@@ -1,21 +1,18 @@
-# Example DeepSeek Harness profile overlay for one RDG portal product repo.
-# Copy per instance (aihub-site, rdg-promotion-console, aihub-doc, aihub-service, aihub-admin).
-# Secrets stay in CLI wrapper env (GITLAB_TOKEN / AIHUB_INTERNAL_SECRET / lark-cli config dir), not here.
+# Alias of the phase-1 single-instance overlay.
+# Prefer examples/rdg-portal-single.cordis.patch.yml (same content).
+# Per-repo five-instance overlays remain under examples/rdg-portal-profiles/ (legacy).
 #
-# See docs/011-rdg-portal-ops.md and docs/012-ixunfei-bot.md
+# Docs: docs/011-rdg-portal-ops.md and docs/012-ixunfei-bot.md
 
 - update:
     - id: dsh-superagent
       config:
-        # Absolute path; one stateDir per product instance.
-        stateDir: /var/dsh/aihub-site
+        stateDir: /var/dsh/rdg-portal
 
-# Enable fork Sources (bundled cordis.patch.yml leaves them disabled).
 - update:
     - id: dsh-superagent-gitlab
       disabled: false
     - id: dsh-superagent-portal-feedback
       disabled: false
-    # i讯飞企业机器人（Feishu Source + LARKSUITE_CLI_BRAND=xfchat.iflytek.com）
     - id: dsh-superagent-feishu
       disabled: false

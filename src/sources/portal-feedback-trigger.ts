@@ -4,13 +4,29 @@ import { key, type Trigger } from '../core/index.ts'
 
 export const SOURCE = 'portal-feedback' as const
 
-/** Product repos hinted to the Worker from feedback `source` (git.iflytek.com paths are operator-local). */
+/** Short product-repo names hinted to the Worker from feedback `source`. */
 export const PRODUCT_REPOS = {
   portal: 'aihub-site',
   console: 'rdg-promotion-console',
   docs: 'aihub-doc',
 } as const
 export type FeedbackSource = keyof typeof PRODUCT_REPOS
+
+/**
+ * Full git.iflytek.com project paths for Worker delivery (`glab -R` / low-risk merge).
+ * Operators may override via ticket notes if a path moves; keep in sync with docs/011.
+ */
+export const PRODUCT_GITLAB_PATHS = {
+  portal: 'rdg-ai-cloud/ai-hub/aihub-site',
+  console: 'rdg-ai-cloud/ai-hub/rdg-promotion-console',
+  docs: 'rdg-ai-cloud/ai-hub/aihub-doc',
+} as const
+
+/** Non-feedback product repos still served by the same single instance (GitLab Issues/MRs). */
+export const EXTRA_PRODUCT_GITLAB_PATHS = {
+  'aihub-service': 'rdg-ai-cloud/ai-hub/aihub-service',
+  'aihub-admin': 'rdg-ai-cloud/ai-hub/aihub-admin',
+} as const
 
 export const FeedbackEntrySchema = z.looseObject({
   id: z.string().min(1),
@@ -50,6 +66,20 @@ export function productRepo(source: string): string {
   return PRODUCT_REPOS[source as FeedbackSource] ?? ''
 }
 
+/** Full GitLab project path for opening / merging MRs for this feedback source. */
+export function deliveryGitlabProject(source: string): string {
+  return PRODUCT_GITLAB_PATHS[source as FeedbackSource] ?? ''
+}
+
+/** Resolve a short product name (or feedback source) to a GitLab path when known. */
+export function gitlabPathForProduct(name: string): string {
+  if (name in PRODUCT_GITLAB_PATHS) return PRODUCT_GITLAB_PATHS[name as FeedbackSource]
+  if (name in PRODUCT_REPOS) return PRODUCT_GITLAB_PATHS[name as FeedbackSource]
+  const byShort = Object.entries(PRODUCT_REPOS).find(([, short]) => short === name)
+  if (byShort) return PRODUCT_GITLAB_PATHS[byShort[0] as FeedbackSource]
+  return EXTRA_PRODUCT_GITLAB_PATHS[name as keyof typeof EXTRA_PRODUCT_GITLAB_PATHS] ?? ''
+}
+
 export function threadId(feedbackId: string): string {
   return feedbackId
 }
@@ -86,6 +116,7 @@ export function feedbackTrigger(entry: FeedbackEntry): Trigger {
       pageKey: entry.pageKey,
       pageTitle: entry.pageTitle,
       productRepo: productRepo(entry.source),
+      productGitlabPath: deliveryGitlabProject(entry.source),
       status: entry.status,
     },
   }
