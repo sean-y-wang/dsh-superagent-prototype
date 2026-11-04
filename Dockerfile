@@ -1,18 +1,26 @@
 # cloud-agent-dispatch gray/dev image.
 # Mirrors aihub-admin multi-stage layout (Node build + watchdog) as closely as a
-# DSH agent bundle allows. Full agent loop still needs DSH CLI + wrappers on
-# PATH or under /data1/.../configs/cloud-agent-dispatch (hostPath).
+# DSH agent bundle allows. Workspace packages under packages/agd-* are built with the root.
+#
+# AGD-PATCH(0006): COPY pnpm-workspace.yaml + packages/, then `pnpm -r` / root `pnpm build`
+# (root package.json build already runs workspace package builds).
 
 ARG NODE_IMAGE=node:22-bookworm-slim
 ARG WATCHDOG_IMAGE=artifacts.iflytek.com/hub-docker-repo/aiaas/base_env/golang:1.23.2-watchdog
 
 FROM ${NODE_IMAGE} AS builder
 WORKDIR /src
-COPY package.json pnpm-lock.yaml* ./
-RUN corepack enable && corepack prepare pnpm@9 --activate \
+# Manifests first for layer cache; packages/*/package.json needed for workspace resolution.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages ./packages
+RUN corepack enable && corepack prepare pnpm@11.7.0 --activate \
   && (pnpm install --frozen-lockfile || pnpm install)
 COPY . .
-RUN pnpm build
+RUN pnpm build \
+  && test -d packages/agd-source-gitlab/lib \
+  && test -d packages/agd-source-portal-feedback/lib \
+  && test -e node_modules/@xf-aiyun/agd-source-gitlab \
+  && test -e node_modules/@xf-aiyun/agd-source-portal-feedback
 
 FROM ${WATCHDOG_IMAGE} AS watchdog
 RUN mkdir -p /out && \
@@ -31,7 +39,7 @@ ENV NODE_ENV=production \
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates git curl python3 \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable && corepack prepare pnpm@9 --activate
+    && corepack enable && corepack prepare pnpm@11.7.0 --activate
 
 COPY --from=watchdog /out/watchdog /usr/local/bin/watchdog
 COPY --from=builder /src /app
@@ -39,9 +47,12 @@ COPY --from=builder /src /app
 RUN npm install --omit=dev --prefix /opt/dsh @deepseek-ai/dsh@0.2.1-rc.5 \
   && ln -sfn /opt/dsh/node_modules/@deepseek-ai/dsh/lib/bin.js /usr/local/bin/dsh-bin.js \
   && printf '%s\n' '#!/usr/bin/env bash' 'exec node /usr/local/bin/dsh-bin.js "$@"' > /usr/local/bin/dsh \
-  && chmod +x /usr/local/bin/dsh /app/scripts/k8s-entrypoint.sh /app/scripts/health-server.py /app/scripts/feedback-cli \
+  && chmod +x /usr/local/bin/dsh /app/scripts/k8s-entrypoint.sh /app/scripts/health-server.py \
+  && chmod +x /app/scripts/feedback-cli /app/packages/agd-source-portal-feedback/bin/feedback-cli 2>/dev/null || true \
   && mkdir -p /var/dsh/rdg-portal /app/log \
-  && dsh -V || dsh --version || true
+  && dsh -V || dsh --version || true \
+  && test -e /app/node_modules/@xf-aiyun/agd-source-gitlab \
+  && test -e /app/node_modules/@xf-aiyun/agd-source-portal-feedback
 
 EXPOSE 19310
 # K8s wraps with watchdog; local docker run can use entrypoint directly.

@@ -22,13 +22,20 @@ build_npm:
   image: ${NODE_IMAGE}
   script:
     - corepack enable
-    - corepack prepare pnpm@9 --activate
+    - corepack prepare pnpm@11.7.0 --activate
     - pnpm install
     - pnpm build
+    # Workspace packages must be present for Cordis to resolve @xf-aiyun/agd-* by name.
+    - test -d packages/agd-source-gitlab/lib
+    - test -d packages/agd-source-portal-feedback/lib
+    - test -e node_modules/@xf-aiyun/agd-source-gitlab
   artifacts:
     paths:
       - lib/
+      - packages/
+      - pnpm-workspace.yaml
       - package.json
+      - pnpm-lock.yaml
       - cordis.patch.yml
       - locale/
       - prompts/
@@ -36,6 +43,7 @@ build_npm:
       - scripts/
       - docs/
       - examples/
+      - iflytek/
       - deploy/
       - .build/
     expire_in: 7 days

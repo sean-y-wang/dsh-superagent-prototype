@@ -1,0 +1,3 @@
+packages:
+  - packages/agd-*
+  - packages/iflytek/aiyun/*

@@ -15,4 +15,4 @@ The host delivers subscribed Issue/MR notes and pipeline changes directly to the
 
 ## RDG low-risk merge (fork)
 
-For portal product repos, research deploy branch is `feature/deploy`. After the MR is ready, run `scripts/gitlab-low-risk-merge.sh --project "$DSH_SUPERAGENT_GITLAB_PROJECT" --mr <iid>` (or `--dry-run`). Exit 2 means human gate: do not merge; notify via i讯飞 and the panel. Never merge to `release/deploy`. See `docs/014-rdg-phase1-close.md` and `prompts/team/delivery-rdg-gitlab.md`.
+For portal product repos, research deploy branch is `feature/deploy`. After the MR is ready, run `scripts/gitlab-low-risk-merge.sh --project "$DSH_SUPERAGENT_GITLAB_PROJECT" --mr <iid>` (or `--dry-run`). Exit 2 means human gate: do not merge; notify via i讯飞 and the panel. Never merge to `release/deploy`. See `docs/014-rdg-phase1-close.md` and `iflytek/aiyun/prompts/team/delivery-rdg-gitlab.md`.

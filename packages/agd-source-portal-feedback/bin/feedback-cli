@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Portal-feedback API wrapper. Injects X-Internal-Secret from env; never log secrets.
+# Contract: feedback-cli api GET|POST <url> [--body '<json>']
+set -euo pipefail
+usage() { echo "usage: $0 api GET|POST <url> [--body '<json>']" >&2; exit 2; }
+[[ ${1:-} == api ]] || usage
+shift
+verb=${1:-}; shift || usage
+path=${1:-}; shift || usage
+body=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --body) body=${2:-}; shift 2 ;;
+    --input)
+      if [[ ${2:-} == - ]]; then body=$(cat); shift 2
+      else body=${2:-}; shift 2; fi ;;
+    *) shift ;;
+  esac
+done
+: "${AIHUB_INTERNAL_SECRET:?set AIHUB_INTERNAL_SECRET (matches aihub-service console.admin_secret / admin upstream.internal_secret)}"
+hdr=(-H "X-Internal-Secret: ${AIHUB_INTERNAL_SECRET}" -H "X-Admin-User: ${AIHUB_ADMIN_USER:-dsh-superagent}" -H "Content-Type: application/json" -H "Accept: application/json")
+# Allow relative paths if AIHUB_ADMIN_BASE_URL / base is set
+if [[ $path != http://* && $path != https://* ]]; then
+  base=${AIHUB_ADMIN_BASE_URL:-${AIHUB_FEEDBACK_BASE_URL:-}}
+  [[ -n $base ]] || { echo "absolute URL required or set AIHUB_ADMIN_BASE_URL" >&2; exit 2; }
+  path="${base%/}$path"
+fi
+if [[ $verb == GET ]]; then
+  exec curl -fsS "${hdr[@]}" "$path"
+elif [[ $verb == POST ]]; then
+  exec curl -fsS "${hdr[@]}" -X POST --data "${body}" "$path"
+else
+  usage
+fi

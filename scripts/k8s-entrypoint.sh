@@ -76,11 +76,25 @@ touch "$READY_FLAG"
 
 start_agent() {
   if command -v dsh >/dev/null 2>&1; then
+    # CrashLoop root cause (pipeline #940275): scripts/dsh-superagent has no --foreground,
+    # and its `start` action uses tmux then exits — wrong for a container PID 1 child.
+    # Correct foreground boot is `dsh --profile <name>` (see dsh --help). Prefer --no-open.
     echo "starting dsh profile=$PROFILE stateDir=$STATE_DIR dsh=$(command -v dsh)"
-    if [ -x /app/scripts/dsh-superagent ]; then
-      exec /app/scripts/dsh-superagent start --profile "$PROFILE" --foreground
+    export DSH_HOME="${DSH_HOME:-$STATE_DIR/dsh-home}"
+    mkdir -p "$DSH_HOME/profiles"
+    # Bootstrap profile once: web template + link this bundle + overlay (idempotent).
+    # Overlay only on first create so later hostPath / panel edits are not wiped.
+    if [ ! -f "$DSH_HOME/profiles/$PROFILE/package.json" ]; then
+      echo "bootstrapping DSH profile $PROFILE under $DSH_HOME"
+      dsh --profile "$PROFILE" --from-default-profile web --dump-config >/dev/null || true
+      (cd /app && dsh plugin --profile "$PROFILE" add "link:/app") || true
+      overlay="/app/iflytek/aiyun/profiles/rdg-portal-single.cordis.patch.yml"
+      [ -f "$overlay" ] || overlay="/app/examples/rdg-portal-single.cordis.patch.yml"
+      if [ -f "$overlay" ]; then
+        cp "$overlay" "$DSH_HOME/profiles/$PROFILE/cordis.patch.yml"
+      fi
     fi
-    exec dsh start --profile "$PROFILE"
+    exec dsh --profile "$PROFILE" --no-open
   fi
   if [ -x "$HOST_CFG/start.sh" ]; then
     echo "starting via hostPath start.sh"

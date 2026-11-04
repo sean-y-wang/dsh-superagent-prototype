@@ -17,13 +17,23 @@
     "types": [
       "node"
     ],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "dsh-superagent/sdk": [
+        "./src/sdk.ts"
+      ]
+    }
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    "tsdown.config.ts"
+    "tsdown.config.ts",
+    "packages/*/src/**/*.ts",
+    "packages/*/tests/**/*.ts",
+    "packages/iflytek/aiyun/*/src/**/*.ts",
+    "iflytek/aiyun/**/*.ts",
+    "vitest.config.ts"
   ]
 }

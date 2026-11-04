@@ -30,6 +30,9 @@ it('defines the worker preset Executor Sessions run under, with a shell that mov
   const rows = await patched()
   expect(rows.map(row => row.id)).toEqual(['dsh-superagent', 'dsh-superagent-github', 'dsh-superagent-feishu', 'dsh-superagent-gitlab', 'dsh-superagent-portal-feedback', 'dsh-superagent-worker-preset',
     'dsh-superagent-router-preset'])
+  // AGD-PATCH(0004): the fork Sources load from their workspace packages by package name.
+  expect(Object.fromEntries(rows.filter(row => ['dsh-superagent-gitlab', 'dsh-superagent-portal-feedback'].includes(row.id!)).map(row => [row.id, row.name])))
+    .toEqual({ 'dsh-superagent-gitlab': '@xf-aiyun/agd-source-gitlab', 'dsh-superagent-portal-feedback': '@xf-aiyun/agd-source-portal-feedback' })
   const preset = presetOf(rows, WORKER_PRESET)
   expect(preset.id).toBe(WORKER_PRESET)
   const plugins = flat(preset.plugins)

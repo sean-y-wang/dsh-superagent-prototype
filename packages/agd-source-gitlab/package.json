@@ -1,0 +1,13 @@
+{
+  "name": "@xf-aiyun/agd-source-gitlab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitLab Source（自建 GitLab：Issue/MR/评论/流水线轮询、MR 跟进与回写）",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": { ".": "./lib/index.js", "./package.json": "./package.json" },
+  "files": ["lib"],
+  "scripts": { "build": "tsdown" },
+  "dependencies": { "dsh-superagent": "workspace:*", "zod": "4.4.3" },
+  "devDependencies": { "tsdown": "0.22.14" }
+}

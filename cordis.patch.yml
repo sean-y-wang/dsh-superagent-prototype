@@ -10,13 +10,13 @@
     - id: dsh-superagent-feishu
       name: dsh-superagent/feishu-watch
       disabled: true
-    # Optional GitLab Source (fork customization for self-hosted instances such as git.iflytek.com).
+    # AGD-PATCH(0004): optional GitLab Source, packaged as @xf-aiyun/agd-source-gitlab (packages/agd-source-gitlab); id kept for existing profiles.
     - id: dsh-superagent-gitlab
-      name: dsh-superagent/gitlab-watch
+      name: '@xf-aiyun/agd-source-gitlab'
       disabled: true
-    # Optional portal page-feedback Source (fork); polls aihub-service admin feedback API.
+    # AGD-PATCH(0004): optional portal page-feedback Source, packaged as @xf-aiyun/agd-source-portal-feedback; id kept for existing profiles.
     - id: dsh-superagent-portal-feedback
-      name: dsh-superagent/portal-feedback-watch
+      name: '@xf-aiyun/agd-source-portal-feedback'
       disabled: true
     # The agent preset of every Executor Session (WORKER_PRESET in src/app/sessions.ts); the main Session has its own, below.
     # It is DSH's `standard` preset with only what a worker needs, and a shell whose foreground command moves to a background job

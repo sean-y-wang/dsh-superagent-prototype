@@ -1,0 +1,13 @@
+{
+  "name": "@xf-aiyun/agd-source-portal-feedback",
+  "version": "0.1.0",
+  "private": true,
+  "description": "门户页面反馈 Source（aihub-service admin feedback，单实例多仓）",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": { ".": "./lib/index.js", "./package.json": "./package.json" },
+  "files": ["lib", "bin"],
+  "scripts": { "build": "tsdown" },
+  "dependencies": { "dsh-superagent": "workspace:*", "zod": "4.4.3" },
+  "devDependencies": { "tsdown": "0.22.14" }
+}

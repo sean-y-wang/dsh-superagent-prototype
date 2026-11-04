@@ -4,7 +4,6 @@ import { UserError, key, latestReport, reached, runningAssignment, threadKey, ty
 import { batchOf, inputMessage, triggerMessage, workerSessionId } from '../executor/dsh.ts'
 import { readGithub } from '../sources/github-read.ts'
 import { readGitlab } from '../sources/gitlab-read.ts'
-import type { GitlabConfig } from '../sources/gitlab.ts'
 import { feishuReferences, feishuRead } from '../sources/feishu-read.ts'
 import { feishuRef } from '../sources/feishu.ts'
 import { feishuTriggerId } from '../sources/feishu-trigger.ts'
@@ -211,7 +210,7 @@ const ROUTES: readonly Route[] = [
   }],
   ['github/', read => sourcePage(read, 'github', () => readGithub(read.host.commands.withSignal(read.signal), read.resource))],
   ['gitlab/', read => sourcePage(read, 'gitlab', () => {
-    const stored = read.host.store.settings().sources.gitlab?.config as GitlabConfig | undefined
+    const stored = read.host.store.settings().sources.gitlab?.config as { baseUrl?: string; project?: string; cli?: string } | undefined
     if (!stored?.baseUrl || !stored.project || !stored.cli) throw new Error('The GitLab Source is not configured')
     return readGitlab(read.host.commands.withSignal(read.signal), {
       baseUrl: stored.baseUrl.replace(/\/$/, ''), project: stored.project, cli: stored.cli,
